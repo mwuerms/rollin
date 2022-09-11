@@ -23,6 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "mpu9250.h"
+#include "string_buffer.h"
 
 /* USER CODE END Includes */
 
@@ -95,13 +97,38 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
+  mpu9250_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  float acc_xy_angle_deg;
+  float gyr_z_angle_deg_rate, gyr_z_angle_deg;
+  float angle_deg, angle_deg_prev;
+  angle_deg_prev = 0;
   while (1)
   {
+	  string_buffer_new();
+	  mpu9250_read_sensor_values();
+	  acc_xy_angle_deg = mpu9250_get_acc_xy_angle_deg();
+	  gyr_z_angle_deg_rate = mpu9250_get_gyr_z_angle_rate_deg_pro_s();
+	  gyr_z_angle_deg = gyr_z_angle_deg_rate * 0.005; //meas_time;
+
+	  // complementary filter for angle from accelerometer and gyroscope
+	  angle_deg = 0.95 * (angle_deg_prev + gyr_z_angle_deg) + 0.05 * acc_xy_angle_deg;
+
+	  string_buffer_append_float(acc_xy_angle_deg, 3);
+	  string_buffer_append_separator();
+	  string_buffer_append_float(gyr_z_angle_deg, 3);
+	  string_buffer_append_separator();
+	  string_buffer_append_float(angle_deg, 3);
+	  string_buffer_append_separator();
+	  string_buffer_append_int16(0);
+
+	  angle_deg_prev = angle_deg;
+	  string_buffer_send_usb();
     /* USER CODE END WHILE */
+
 
     /* USER CODE BEGIN 3 */
   }
