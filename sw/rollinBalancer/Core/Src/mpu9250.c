@@ -19,9 +19,8 @@
 #define NB_ELEMENTS(x)	(sizeof(x)/sizeof(x[0]))
 //#define SPI1_NSS_Pin LL_GPIO_PIN_4
 //#define SPI1_NSS_GPIO_Port GPIOA
-#define SPI1_NSS_PinMask	LL_GPIO_PIN_4
-#define nSS_Set()	LL_GPIO_SetOutputPin(SPI1_NSS_GPIO_Port, SPI1_NSS_PinMask);
-#define nSS_Reset()	LL_GPIO_ResetOutputPin(SPI1_NSS_GPIO_Port, SPI1_NSS_PinMask);
+#define nSS_Set()	LL_GPIO_SetOutputPin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin);
+#define nSS_Reset()	LL_GPIO_ResetOutputPin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin);
 
 #define RAD_TO_DEG	(180.0f/M_PI)
 
@@ -173,14 +172,14 @@ uint16_t mpu9250_read_sensor_values(void) {
 }
 
 float mpu9250_get_acc_xy_angle_deg(void) {
-	uint16_t value;
+	int16_t value;
 	float acc_x, acc_y, angle_deg;
 	// acc x
-	value = (mpu9250_sensor_data_buffer[1] << 8) | mpu9250_sensor_data_buffer[2];	// big endian
+	value = (int16_t)((mpu9250_sensor_data_buffer[1] << 8) | mpu9250_sensor_data_buffer[2]);	// big endian
 	acc_x = mpu9250_corr_acc.x.gain * (float)value + mpu9250_corr_acc.x.offset;
 
 	// acc y
-	value = (mpu9250_sensor_data_buffer[3] << 8) | mpu9250_sensor_data_buffer[4];	// big endian
+	value = (int16_t)((mpu9250_sensor_data_buffer[3] << 8) | mpu9250_sensor_data_buffer[4]);	// big endian
 	acc_y = mpu9250_corr_acc.y.gain * (float)value + mpu9250_corr_acc.y.offset;
 
 	angle_deg = (float)atan2((double)acc_x, (double)acc_y) * RAD_TO_DEG;
@@ -192,12 +191,16 @@ float mpu9250_get_acc_xy_angle_correction(float angle_deg) {
 	return angle_deg - 90.0f;
 }
 
+int16_t mpu9250_get_gyr_z_rate_raw(void) {
+	return (int16_t)((mpu9250_sensor_data_buffer[13] << 8) | mpu9250_sensor_data_buffer[14]);
+}
+
 float mpu9250_get_gyr_z_angle_rate_deg_pro_s(void) {
-	uint16_t value;
+	int16_t value;
 	float angle_deg_pro_sec;
 	// gyr z
-	value = (mpu9250_sensor_data_buffer[13] << 8) | mpu9250_sensor_data_buffer[14];	// big endian
-	angle_deg_pro_sec = (float)value + gyr_meas_z_0;
+	value = (int16_t)((mpu9250_sensor_data_buffer[13] << 8) | mpu9250_sensor_data_buffer[14]);	// big endian
+	angle_deg_pro_sec = (float)value - gyr_meas_z_0;
 	angle_deg_pro_sec *= (250.0f/32768.0f); // scale to +/-250 dps
 
 	return angle_deg_pro_sec;

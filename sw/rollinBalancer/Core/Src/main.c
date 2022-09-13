@@ -43,6 +43,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN PV */
 
@@ -54,12 +55,54 @@ static void MX_GPIO_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void _wait_some_time(void) {
+	asm("NOP");
+	for(uint32_t cnt = 50000; cnt; cnt--) {
+	}
+}
+
+static float acc_xy_angle_deg;
+static float gyr_z_angle_deg_rate, gyr_z_angle_deg;
+static float angle_deg, angle_deg_prev = 0;
+
+float get_angle_deg(void) {
+	return angle_deg;
+}
+
+void read_mpu9250_values(void) {
+	mpu9250_read_sensor_values();
+	acc_xy_angle_deg = mpu9250_get_acc_xy_angle_deg();
+	acc_xy_angle_deg -= 90.0f;
+	gyr_z_angle_deg_rate = mpu9250_get_gyr_z_angle_rate_deg_pro_s();
+	gyr_z_angle_deg = gyr_z_angle_deg_rate * 0.01201;//0.01192; //meas_time in s
+
+	// complementary filter for angle from accelerometer and gyroscope
+	angle_deg = 0.95 * (angle_deg_prev + gyr_z_angle_deg) + 0.05 * acc_xy_angle_deg;
+	angle_deg_prev = angle_deg;
+}
+
+static void read_mpu9250_string(void) {
+	read_mpu9250_values();
+
+	string_buffer_append_float(acc_xy_angle_deg, 3);
+	string_buffer_append_separator();
+	string_buffer_append_float(gyr_z_angle_deg, 3);
+	string_buffer_append_separator();
+	string_buffer_append_float(angle_deg, 3);
+	string_buffer_append_separator();
+	string_buffer_append_int16(0);
+	string_buffer_append_char('\n');
+
+	angle_deg_prev = angle_deg;
+	string_buffer_send_usb();
+}
 
 /* USER CODE END 0 */
 
@@ -95,6 +138,7 @@ int main(void)
   MX_TIM2_Init();
   MX_USB_DEVICE_Init();
   MX_SPI1_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   mpu9250_init();
@@ -102,33 +146,13 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  float acc_xy_angle_deg;
-  float gyr_z_angle_deg_rate, gyr_z_angle_deg;
-  float angle_deg, angle_deg_prev;
-  angle_deg_prev = 0;
   while (1)
   {
-	  string_buffer_new();
-	  mpu9250_read_sensor_values();
-	  acc_xy_angle_deg = mpu9250_get_acc_xy_angle_deg();
-	  gyr_z_angle_deg_rate = mpu9250_get_gyr_z_angle_rate_deg_pro_s();
-	  gyr_z_angle_deg = gyr_z_angle_deg_rate * 0.005; //meas_time;
+	  read_mpu9250_string();
 
-	  // complementary filter for angle from accelerometer and gyroscope
-	  angle_deg = 0.95 * (angle_deg_prev + gyr_z_angle_deg) + 0.05 * acc_xy_angle_deg;
 
-	  string_buffer_append_float(acc_xy_angle_deg, 3);
-	  string_buffer_append_separator();
-	  string_buffer_append_float(gyr_z_angle_deg, 3);
-	  string_buffer_append_separator();
-	  string_buffer_append_float(angle_deg, 3);
-	  string_buffer_append_separator();
-	  string_buffer_append_int16(0);
-
-	  angle_deg_prev = angle_deg;
-	  string_buffer_send_usb();
+	  _wait_some_time();
     /* USER CODE END WHILE */
-
 
     /* USER CODE BEGIN 3 */
   }
@@ -178,6 +202,40 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   LL_RCC_SetUSBClockSource(LL_RCC_USB_CLKSOURCE_PLL);
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
