@@ -25,6 +25,7 @@ uint16_t mpu9250_read_sensor_data(uint8_t *rx_data);
 
 uint16_t mpu9250_read_sensor_values(void);
 float mpu9250_get_acc_xy_angle_deg(void);
+int16_t mpu9250_get_gyr_z_rate_raw(void);
 float mpu9250_get_gyr_z_angle_rate_deg_pro_s(void);
 
 #endif // _MPU9250_H_
