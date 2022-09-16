@@ -216,9 +216,7 @@ void com_append_int32(int32_t value) {
 }
 
 void com_append_float(float f, uint32_t nb_dec_places) {
-	//int32_t digits_reverse[] = {1, 10, 100, 1000, 10000, 100000, 1000000,10000000, 100000000, 1000000000};
 	int32_t x;
-	uint8_t digit;
 
 	x = (int32_t)f;
 	com_append_int32(x);
@@ -248,8 +246,8 @@ void com_append_float(float f, uint32_t nb_dec_places) {
 }
 
 void _wait_some_time(void) {
-	for(uint32_t cnt = 1000000; cnt; cnt--) {
 		asm("NOP");
+	for(uint32_t cnt = 100000; cnt; cnt--) {
 	}
 }
 
@@ -348,6 +346,7 @@ gyro x	gyro y	gyro z
 const float acc_1g = 16384.0f;
 const float acc_meas_x_1g[] = {16381.9047619048f, -16359.6470588235f};
 const float acc_meas_y_1g[] = {16533.1304347826f, -16190.7777777778f};
+const float gyr_meas_z_0 = -266.373261985954f;
 
 typedef struct {
 	float gain, offset;
@@ -357,7 +356,7 @@ struct {
 	gain_offset_t x;
 	gain_offset_t y;
 } mpu9250_corr_acc;
-float alpha_deg_corr = -90.0f;
+float acc_xy_angle_deg_corr = -90.0f;
 
 float mpu9250_calc_acc(int16_t value, gain_offset_t *corr) {
 	return corr->gain * (float)value + corr->offset;
@@ -373,7 +372,13 @@ float rad_to_deg(float a_rad) {
 struct {
 	float x, y;
 } acc_values;
-float alpha, alpha_deg;
+float acc_xy_angle_deg;
+float gyr_z_angle_deg;
+float angle_deg, angle_deg_prev;
+
+
+#define SEP_SERIAL_PLOTTER ' ' // better serial plotter uses ' ' (space)
+#define SEP SEP_SERIAL_PLOTTER
 /* USER CODE END 0 */
 
 /**
@@ -433,6 +438,7 @@ int main(void)
   com_clear_buffer();
   com_append_string("acc x, acc y, acc z, gyro x, gyro y, gyro z, temp\n");
   com_send_buffer();
+  angle_deg_prev = 0.0f;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -448,35 +454,56 @@ int main(void)
 	  value = (int16_t)((sensor_data[3] << 8) + sensor_data[4]); // acc y
 	  acc_values.y = mpu9250_calc_acc(value, &mpu9250_corr_acc.y);
 	  //com_append_int16(value);
-	  //com_append_char(',');
+	  //com_append_char(SEP);
 	  value = (int16_t)((sensor_data[5] << 8) + sensor_data[6]); // acc z
 	  //com_append_int16(value);
-	  //com_append_char(',');
+	  //com_append_char(SEP);
 
 	  // gyro
 	  value = (int16_t)((sensor_data[9] << 8) + sensor_data[10]); // gyro x
 	  //com_append_int16(value);
-	  //com_append_char(',');
+	  //com_append_char(SEP);
 	  value = (int16_t)((sensor_data[11] << 8) + sensor_data[12]); // gyro y
 	  //com_append_int16(value);
-	  //com_append_char(',');
+	  //com_append_char(SEP);
 	  value = (int16_t)((sensor_data[13] << 8) + sensor_data[14]); // gyro z
 	  //com_append_int16(value);
-	  //com_append_char(',');
+	  //com_append_char(SEP);
+
+	  //float gyr_sample_rate = 0.260; // 260 ms
+	  //float gyr_z_rate_deg;
+
+	  gyr_z_angle_deg = (float)value; // RATE! in deg/s -> * s -> deg
+	  gyr_z_angle_deg -= gyr_meas_z_0;
+	  gyr_z_angle_deg *= (250.0f/32768.0f); // scale to +/-250 dps
+	  gyr_z_angle_deg = gyr_z_angle_deg * 0.02685f;
+	  com_append_float(gyr_z_angle_deg, 5);
+	  com_append_char(SEP);
+
 
 	  //com_append_float(acc_values.x, 5);
-	  //com_append_char(',');
+	  //com_append_char(SEP);
 
 	  //com_append_float(acc_values.y, 5);
-	  //com_append_char(',');
+	  //com_append_char(SEP);
 
 
-		alpha = acc_to_alpha_rad(acc_values.x, acc_values.y);
-		alpha_deg = rad_to_deg(alpha);
-		alpha_deg += alpha_deg_corr;
+		acc_xy_angle_deg = acc_to_alpha_rad(acc_values.x, acc_values.y);
+		acc_xy_angle_deg = rad_to_deg(acc_xy_angle_deg);
+		acc_xy_angle_deg += acc_xy_angle_deg_corr;
 
-		com_append_float(alpha_deg, 5);
-		com_append_char(',');
+		com_append_float(acc_xy_angle_deg, 5);
+		com_append_char(SEP);
+
+		// dragon bot
+		//angle_deg = 0.9934f * (angle_deg_prev + gyr_z_angle_deg) + 0.0066f * acc_xy_angle_deg;
+
+		angle_deg = 0.95f * (angle_deg_prev + gyr_z_angle_deg) + 0.05f * acc_xy_angle_deg;
+
+		com_append_float(angle_deg, 5);
+		com_append_char(SEP);
+
+		angle_deg_prev = angle_deg;
 
 	  // temp
 	  value = (int16_t)((sensor_data[7] << 8) + sensor_data[8]); // temp
