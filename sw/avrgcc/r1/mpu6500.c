@@ -11,6 +11,7 @@
 
 #include "i2c.h"
 
+static const mpu650_addr = 0x68;
 
 static char mpu_str[16];
 static void _to_mpu_str(uint8_t val) {
@@ -30,38 +31,12 @@ static void _to_mpu_str(uint8_t val) {
 
 static uint8_t who = 0;
 static uint8_t _read(uint8_t dev_addr, uint8_t reg_addr) {
-    do {
-        I2C_ErrorCode = 0;
-        i2c_start(dev_addr | 0); // mpu6500
-        if (I2C_ErrorCode)
-        {
-            // error
-            return 0;
-        }
-        I2C_ErrorCode = 0;
-        i2c_byte(117);
-        if (I2C_ErrorCode)
-        {
-            // error
-            return 0;
-        }
-        i2c_stop();
-
-        i2c_start(dev_addr | 1);
-        if (I2C_ErrorCode)
-        {
-            // error
-            return 0;
-        }
-        who = i2c_readAck();
-        if (I2C_ErrorCode)
-        {
-            // error
-            return 0;
-        }
-        i2c_stop();
+    if(i2c_write_reg_addr(dev_addr, 117) != 1) {
+        return 0;
     }
-    while(0);
+    if(i2c_read_buffer(dev_addr, &who, 1) != 1) {
+        return 0;
+    }
     return 1;
 }
 

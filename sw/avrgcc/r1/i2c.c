@@ -191,6 +191,74 @@ uint8_t i2c_readNAck(void)
     };
     return TWDR;
 }
+
+#define I2C_READ    (1)
+#define I2C_WRITE   (0)
+uint8_t i2c_write_reg_addr(uint8_t i2c_addr, uint8_t reg_addr) {
+    I2C_ErrorCode = 0;
+    i2c_start(i2c_addr | I2C_READ);
+    if (I2C_ErrorCode)
+    {
+        // error
+        return 0;
+    }
+    I2C_ErrorCode = 0;
+    i2c_byte(reg_addr);
+    if (I2C_ErrorCode)
+    {
+        // error
+        return 0;
+    }
+    i2c_stop();
+    return 1;
+}
+
+uint8_t i2c_write_buffer(uint8_t i2c_addr, uint8_t *buffer, uint8_t length) {
+    uint8_t n;
+
+    I2C_ErrorCode = 0;
+    i2c_start(i2c_addr | I2C_READ);
+    if (I2C_ErrorCode)
+    {
+        // error
+        return 0;
+    }
+    for(n = 0; n < length; n++) {
+        I2C_ErrorCode = 0;
+        i2c_byte(buffer[n]);
+        if (I2C_ErrorCode)
+        {
+            // error
+            break;
+        }
+    }
+    i2c_stop();
+    return n;
+}
+
+uint8_t i2c_read_buffer(uint8_t i2c_addr, uint8_t *buffer, uint8_t length) {
+    uint8_t n;
+
+    I2C_ErrorCode = 0;
+    i2c_start(i2c_addr | I2C_WRITE);
+    if (I2C_ErrorCode)
+    {
+        // error
+        return 0;
+    }
+    for(n = 0; n < length; n++) {
+        I2C_ErrorCode = 0;
+        buffer[n] = i2c_readAck();
+        if (I2C_ErrorCode)
+        {
+            // error
+            break;
+        }
+    }
+    i2c_stop();
+    return n;
+}
+
 #else
 #error "Micorcontroller not supported now!"
 #endif
