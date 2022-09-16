@@ -10,24 +10,9 @@
 #include <stdint.h>
 
 #include "i2c.h"
+#include "string_buffer.h"
 
 static const mpu650_addr = 0x68;
-
-static char mpu_str[16];
-static void _to_mpu_str(uint8_t val) {
-    uint8_t c;
-    c = val / 100;
-    mpu_str[0] = '0' + c;
-    val = val - c * 100;
-    
-    c = val / 10;
-    mpu_str[1] = '0' + c;
-    val = val - c * 10;
-
-    mpu_str[2] = '0' + val;
-    
-    mpu_str[3] = 0; // term
-}
 
 static uint8_t who = 0;
 static uint8_t _read(uint8_t dev_addr, uint8_t reg_addr) {
@@ -46,12 +31,14 @@ static uint8_t _find(void) {
     uart_puts("_find()\n addr:\n");
     for(dev_addr = 0x00; dev_addr < 0xF0; dev_addr += 2) {
         // READ = 1
-        _to_mpu_str(dev_addr);
-        uart_puts(mpu_str);
+        string_buffer_new();
+        string_buffer_append_uint8(dev_addr);
+        string_buffer_send_uart();
         if(_read(dev_addr, 117)) {
             uart_puts(" found, who: ");
-            _to_mpu_str(who);
-            uart_puts(mpu_str);
+            string_buffer_new();
+            string_buffer_append_uint8(who);
+            string_buffer_send_uart();
         }
         uart_putc('\n');
     }
