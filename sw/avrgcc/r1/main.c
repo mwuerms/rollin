@@ -17,7 +17,7 @@
 #include "pwm.h"
 #include "wdt.h"
 
-#include "i2c.h"
+#include "uart.h"
 
 /* - defines ---------------------------------------------------------------- */
 
@@ -36,15 +36,10 @@ int main(void)
     sleep_mode_init();
     use_sleep_mode(ACTIVE);
 
-    i2c_init();
-    i2c_start(0b1101000); // mpu6500
-    if (I2C_ErrorCode & (1 << I2C_START))
-    {
-        // OK
-    }
-    i2c_byte(117);
-    i2c_readAck();
-    i2c_stop();
+    uart_Init(UBRR_VAL_57600);
+    uart_puts("rollin am start\n");
+    mpu6500_init();
+    
 
     sei();
 
