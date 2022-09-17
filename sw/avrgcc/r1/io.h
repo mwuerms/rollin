@@ -12,9 +12,15 @@
 // Motor A PWM, PORTD
 #define DDR_MOTORA (DDRD)
 #define PORT_MOTORA (PORTD)
-#define PIN_MOTORA_U (1) // PD1/OC2B: motor a, pwm u
+#define PIN_MOTORA_U (3) // PD1/OC2B: motor a, pwm u
 #define PIN_MOTORA_V (5) // PD5/OC0B: motor a, pwm v
 #define PIN_MOTORA_W (6) // PD6/OC0A: motor a, pwm w
+// Motor A PWM, PORTD
+#define DDR_MOTORB (DDRB)
+#define PORT_MOTORB (PORTB)
+#define PIN_MOTORB_U (1) // PD1/OC2B: motor a, pwm u
+#define PIN_MOTORB_V (2) // PD5/OC0B: motor a, pwm v
+#define PIN_MOTORB_W (3) // PD6/OC0A: motor a, pwm w
 
 // ISP PORTB: 3, 4, 5
 
