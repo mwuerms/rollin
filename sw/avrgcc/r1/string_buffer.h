@@ -17,12 +17,16 @@
 void string_buffer_new(void);
 void string_buffer_send_uart(void);
 uint32_t string_buffer_append_char(char c);
+#define string_buffer_append_string_terminator() string_buffer_append_char('\0')
 #define string_buffer_append_separator() string_buffer_append_char(SEP)
+#define string_buffer_append_new_line() string_buffer_append_char('\n')
+
 void string_buffer_append_string(char *str);
 void string_buffer_append_int8(int8_t value);
 void string_buffer_append_uint8(uint8_t value);
+void string_buffer_append_uint8_hex(uint8_t value);
 void string_buffer_append_int16(int16_t value);
-//void string_buffer_append_int32(int32_t value);
+// void string_buffer_append_int32(int32_t value);
 void string_buffer_append_float(float f, uint32_t nb_dec_places);
 
 #endif // _STRING_BUFFER_H_

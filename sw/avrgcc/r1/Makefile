@@ -85,7 +85,7 @@ FORMAT = ihex
 OBJDIR = obj
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = main.c mcusleep.c wdt.c mpu6500.c i2c.c uart.c string_buffer.c#pwm.c
+SRC = main.c mcusleep.c wdt.c mpu6500.c i2c.c uart.c string_buffer.c motor.c
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =
