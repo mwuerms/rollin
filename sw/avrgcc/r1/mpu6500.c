@@ -102,26 +102,27 @@ uint8_t mpu6500_init(void)
                 string_buffer_send_uart();
             }
         }
-        // read data
-        uart_puts("read data\n");
-        uart_puts("reg (hex), content (hex)\n");
-        if (mpu650_read_reg(59, 14) == RET_ERR)
+        */
+    // read data
+    uart_puts("read user config\n");
+    uart_puts("reg (hex), content (hex)\n");
+    if (mpu650_read_reg(105, 4) == RET_ERR)
+    {
+        // signal: could not read
+        uart_puts("\nerror: could not read\n");
+    }
+    else
+    {
+        for (n = 0; n < 4; n++)
         {
-            // signal: could not read
-            uart_puts("\nerror: could not read\n");
+            string_buffer_new();
+            string_buffer_append_uint8_hex(n + 105);
+            string_buffer_append_char(',');
+            string_buffer_append_uint8_hex(mpu6500_data_buffer[n]);
+            string_buffer_append_new_line();
+            string_buffer_send_uart();
         }
-        else
-        {
-            for (n = 0; n < 14; n++)
-            {
-                string_buffer_new();
-                string_buffer_append_uint8_hex(n + 59);
-                string_buffer_append_char(',');
-                string_buffer_append_uint8_hex(mpu6500_data_buffer[n]);
-                string_buffer_append_new_line();
-                string_buffer_send_uart();
-            }
-        }*/
+    }
 }
 
 uint8_t mpu6500_set_config(void)
@@ -137,19 +138,13 @@ uint8_t mpu6500_set_config(void)
     {
         return RET_ERR;
     }
-    return RET_OK;
-    /*mpu6500_data_buffer[0] = 106;  // reg_addr
-    mpu6500_data_buffer[1] = 0x00; // 106: user ctrl
-    mpu6500_data_buffer[2] = 0x00; // 27: gyro config: +/-250 dps, 250 Hz bandwidth, 0.97 ms delay
-    mpu6500_data_buffer[3] = 0x00; // 28: accel config: +/- 2 g
-    mpu6500_data_buffer[4] = 0x00; // 29: accel config 2: 460 Hz bandwidth, 1.94 ms delay
-    mpu6500_data_buffer[5] = 0x00; // 30: low power acc odr ctrl: 0.24 Hz
-    mpu6500_data_buffer[6] = 0x00; // 31
-    if (mpu650_write_reg(7) == RET_ERR)
+    mpu6500_data_buffer[0] = 107;  // reg_addr
+    mpu6500_data_buffer[1] = 0x00; // 107: power management
+    if (mpu650_write_reg(2) == RET_ERR)
     {
         return RET_ERR;
     }
-    return RET_OK;*/
+    return RET_OK;
 }
 
 uint8_t mpu6500_read_sensor_data(uint8_t *buffer, uint8_t length)

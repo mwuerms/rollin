@@ -79,7 +79,7 @@ int main(void)
 
     motor_start();
     motorA_update_pwm(sine_lookup[pwm_index_a.u], sine_lookup[pwm_index_a.v], sine_lookup[pwm_index_a.w]);
-    wdtTimer_StartTimeout(1, WDT_TIMER_INTERVAL_500MS, EV_READ_SENSOR);
+    wdtTimer_StartTimeout(15, WDT_TIMER_INTERVAL_500MS, EV_READ_SENSOR);
 
     DBG_PIN0_OUT();
     DBG_PIN0_CLR();
@@ -108,11 +108,11 @@ int main(void)
 
         if (local_events & EV_READ_SENSOR)
         {
-            wdtTimer_StartTimeout(1, WDT_TIMER_INTERVAL_500MS, EV_READ_SENSOR);
+            wdtTimer_StartTimeout(15, WDT_TIMER_INTERVAL_500MS, EV_READ_SENSOR);
             mpu6500_read_sensor_data(sens_buffer, 14);
-            acc_x = (int16_t)(sens_buffer[0] < 8) + sens_buffer[1];
-            acc_y = (int16_t)(sens_buffer[2] < 8) + sens_buffer[3];
-            gyr_z = (int16_t)(sens_buffer[12] < 8) + sens_buffer[13];
+            acc_x = (int16_t)(sens_buffer[0] << 8) + sens_buffer[1];
+            acc_y = (int16_t)(sens_buffer[2] << 8) + sens_buffer[3];
+            gyr_z = (int16_t)(sens_buffer[12] << 8) + sens_buffer[13];
             string_buffer_new();
             string_buffer_append_int16(acc_x);
             string_buffer_append_separator();
