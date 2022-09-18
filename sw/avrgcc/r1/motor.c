@@ -101,6 +101,7 @@ void motor_start(void)
 
 void motorA_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w)
 {
+    // idea: calc torque factor at this point, eg: 0 (0) ... 1 (256)
     MOTORA_OCR_U = pwm_u;
     MOTORA_OCR_V = pwm_v;
     MOTORA_OCR_W = pwm_w;
@@ -129,6 +130,10 @@ void motorB_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w)
         string_buffer_append_uint8(pwm_w);
         string_buffer_append_new_line();
         string_buffer_send_uart();*/
+}
+
+void motor_send_event_after_nb_ticks(uint8_t event, uint8_t nb_ticks)
+{
 }
 
 void motor_stop(void)

@@ -59,6 +59,9 @@ static uint8_t inc_uint8_max(uint8_t value, uint8_t max)
 #define DBG_PIN0_OUT() (DDRB |= _BV(4))
 #define DBG_PIN0_SET() (PORTB |= _BV(4))
 #define DBG_PIN0_CLR() (PORTB &= ~_BV(4))
+
+uint8_t sens_buffer[16];
+int16_t acc_x, acc_y, gyr_z;
 /**
  * main loop
  */
@@ -72,10 +75,11 @@ int main(void)
     uart_Init(UBRR_VAL_57600);
     uart_puts("rollin am start\n");
     mpu6500_init();
+    mpu6500_set_config();
 
     motor_start();
     motorA_update_pwm(sine_lookup[pwm_index_a.u], sine_lookup[pwm_index_a.v], sine_lookup[pwm_index_a.w]);
-    // wdtTimer_StartTimeout(1, WDT_TIMER_INTERVAL_16MS, EV_UPDATE_PWM);
+    wdtTimer_StartTimeout(1, WDT_TIMER_INTERVAL_500MS, EV_READ_SENSOR);
 
     DBG_PIN0_OUT();
     DBG_PIN0_CLR();
@@ -101,6 +105,26 @@ int main(void)
             motorB_update_pwm(sine_lookup[pwm_index_a.u] * 1, sine_lookup[pwm_index_a.v] * 1, sine_lookup[pwm_index_a.w] * 1);
             DBG_PIN0_CLR();
         }
+
+        if (local_events & EV_READ_SENSOR)
+        {
+            wdtTimer_StartTimeout(1, WDT_TIMER_INTERVAL_500MS, EV_READ_SENSOR);
+            mpu6500_read_sensor_data(sens_buffer, 14);
+            acc_x = (int16_t)(sens_buffer[0] < 8) + sens_buffer[1];
+            acc_y = (int16_t)(sens_buffer[2] < 8) + sens_buffer[3];
+            gyr_z = (int16_t)(sens_buffer[12] < 8) + sens_buffer[13];
+            string_buffer_new();
+            string_buffer_append_int16(acc_x);
+            string_buffer_append_separator();
+            string_buffer_append_int16(acc_y);
+            string_buffer_send_uart();
+            string_buffer_new();
+            string_buffer_append_separator();
+            string_buffer_append_int16(gyr_z);
+            string_buffer_append_new_line();
+            string_buffer_send_uart();
+        }
+
         while (1)
         {
             cli();

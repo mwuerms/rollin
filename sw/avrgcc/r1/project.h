@@ -22,6 +22,7 @@
 extern volatile uint8_t global_events;
 #define EV_WAKEUP _BV(0)
 #define EV_UPDATE_PWM _BV(1)
+#define EV_READ_SENSOR _BV(2)
 
 #define SEND_EVENT(ev) global_events |= ev
 
