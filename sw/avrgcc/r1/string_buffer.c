@@ -12,7 +12,7 @@
 // - defines -------------------------------------------------------------------
 
 // - private variables ---------------------------------------------------------
-#define STRING_BUFFER_SIZE (16)
+#define STRING_BUFFER_SIZE (32)
 static struct
 {
 	uint8_t data[STRING_BUFFER_SIZE];

@@ -41,7 +41,7 @@
 
 // - private functions ---------------------------------------------------------
 static volatile uint8_t tim_cnt = 0;
-#define TIM_CNT_RELOAD 8 // 16 // 32 // 62
+#define TIM_CNT_RELOAD 32 // all OK: 8 // 16 // 32 // 62
 // tested: 8 is the fastest!
 ISR(TIMER1_COMPA_vect)
 {
