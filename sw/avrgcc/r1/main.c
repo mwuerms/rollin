@@ -29,10 +29,10 @@ typedef struct
 } motor_index_t;
 
 /* - public variables ------------------------------------------------------- */
-// static uint8_t sine_lookup[] = {127, 135, 143, 151, 159, 167, 175, 183, 190, 197, 204, 210, 216, 222, 227, 232, 236, 240, 244, 247, 249, 251, 252, 253, 254, 253, 252, 251, 249, 247, 244, 240, 236, 232, 227, 222, 216, 210, 204, 197, 190, 183, 175, 167, 159, 151, 143, 135, 127, 118, 110, 102, 94, 86, 78, 70, 63, 56, 49, 43, 37, 31, 26, 21, 17, 13, 9, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 9, 13, 17, 21, 26, 31, 37, 43, 49, 56, 63, 70, 78, 86, 94, 102, 110, 118};
-// static motor_index_t pwm_index_a = {.u = 0, .v = 32, .w = 64};
-static uint8_t sine_lookup[] = {127, 143, 159, 175, 190, 204, 216, 227, 236, 244, 249, 252, 254, 252, 249, 244, 236, 227, 216, 204, 190, 175, 159, 143, 127, 110, 94, 78, 63, 49, 37, 26, 17, 9, 4, 1, 0, 1, 4, 9, 17, 26, 37, 49, 63, 78, 94, 110};
-static motor_index_t pwm_index_a = {.u = 0, .v = 16, .w = 32};
+static uint8_t sine_lookup[] = {127, 135, 143, 151, 159, 167, 175, 183, 190, 197, 204, 210, 216, 222, 227, 232, 236, 240, 244, 247, 249, 251, 252, 253, 254, 253, 252, 251, 249, 247, 244, 240, 236, 232, 227, 222, 216, 210, 204, 197, 190, 183, 175, 167, 159, 151, 143, 135, 127, 118, 110, 102, 94, 86, 78, 70, 63, 56, 49, 43, 37, 31, 26, 21, 17, 13, 9, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 9, 13, 17, 21, 26, 31, 37, 43, 49, 56, 63, 70, 78, 86, 94, 102, 110, 118};
+static motor_index_t pwm_index_a = {.u = 0, .v = 32, .w = 64};
+// static uint8_t sine_lookup[] = {127, 143, 159, 175, 190, 204, 216, 227, 236, 244, 249, 252, 254, 252, 249, 244, 236, 227, 216, 204, 190, 175, 159, 143, 127, 110, 94, 78, 63, 49, 37, 26, 17, 9, 4, 1, 0, 1, 4, 9, 17, 26, 37, 49, 63, 78, 94, 110};
+// static motor_index_t pwm_index_a = {.u = 0, .v = 16, .w = 32};
 // static uint8_t sine_lookup[] = {127, 159, 190, 216, 236, 249, 254, 249, 236, 216, 190, 159, 127, 94, 63, 37, 17, 4, 0, 4, 17, 37, 63, 94};
 // static motor_index_t pwm_index_a = {.u = 0, .v = 8, .w = 16};
 // static uint8_t sine_lookup[] = {127, 190, 236, 254, 236, 190, 127, 63, 17, 0, 17, 63};
@@ -46,15 +46,20 @@ volatile uint8_t global_button_events;
 
 static uint8_t inc_uint8_max(uint8_t value, uint8_t max)
 {
-    value++;
-    if (value >= max)
-        return 0;
-    return value; /*
-     if (value < (max - 1))
-     {
-         return value + 1;
-     }
-     return 0;*/
+    if (value < (max - 1))
+    {
+        return value + 1;
+    }
+    return 0;
+}
+
+static uint8_t dec_uint8_reload(uint8_t value, uint8_t reload)
+{
+    if (value)
+    {
+        return value - 1;
+    }
+    return reload;
 }
 
 #define DBG_PIN0_OUT() (DDRB |= _BV(4))
@@ -66,9 +71,9 @@ int16_t acc_x, acc_y, gyr_z;
 
 float angle_acc, angle_gyr, angle_deg, angle_deg_prev;
 
-int16_t angle_index, motor_index = 0;
+int16_t angle_index, motor_index_error, motor_index = 0;
 #define MOTOR_INDEX_MAX ((7 * 48) - 1)
-#define MOTOR_INDEX_MIN -(7*48))
+#define MOTOR_INDEX_MIN -(7 * 48)
 
 #define RAD_TO_DEG (180.0f / M_PI)
 /**
@@ -95,6 +100,7 @@ int main(void)
     DBG_PIN0_CLR();
 
     angle_deg_prev = 0.0f;
+    motor_index = 0;
 
     sei();
 
@@ -107,15 +113,50 @@ int main(void)
             DBG_PIN0_SET();
             // wdtTimer_StartTimeout(1, WDT_TIMER_INTERVAL_16MS, EV_UPDATE_PWM);
 
+            motor_index_error = angle_index - motor_index;
+
+            // if (angle_index > 0)
+            if (motor_index_error == 0)
+            {
+                asm volatile("nop");
+            }
+            else if (motor_index_error > 0)
+            {
+                // positive error: ++
+                if (motor_index < MOTOR_INDEX_MAX)
+                {
+                    motor_index++;
+                    pwm_index_a.u = inc_uint8_max(pwm_index_a.u, nb_sine_steps);
+                    pwm_index_a.v = inc_uint8_max(pwm_index_a.v, nb_sine_steps);
+                    pwm_index_a.w = inc_uint8_max(pwm_index_a.w, nb_sine_steps);
+                }
+            }
+            else if (motor_index_error < 0)
+            {
+                // negative error: --
+                if (motor_index > MOTOR_INDEX_MIN)
+                {
+                    motor_index--;
+                    pwm_index_a.u = dec_uint8_reload(pwm_index_a.u, nb_sine_steps);
+                    pwm_index_a.v = dec_uint8_reload(pwm_index_a.v, nb_sine_steps);
+                    pwm_index_a.w = dec_uint8_reload(pwm_index_a.w, nb_sine_steps);
+                }
+            }
+            /*          pwm_index_a.u = (motor_index + 0) % 48;
+                      pwm_index_a.v = (motor_index + 16) % 48;
+                      pwm_index_a.w = (motor_index + 32) % 48;
+*/
+            /*
             pwm_index_a.u = inc_uint8_max(pwm_index_a.u, nb_sine_steps);
             pwm_index_a.v = inc_uint8_max(pwm_index_a.v, nb_sine_steps);
             pwm_index_a.w = inc_uint8_max(pwm_index_a.w, nb_sine_steps);
+            */
             // motorA_update_pwm(sine_lookup[pwm_index_a.u] * 0.25, sine_lookup[pwm_index_a.v] * 0.25, sine_lookup[pwm_index_a.w] * 0.25);
             // motorB_update_pwm(sine_lookup[pwm_index_a.u] * 0.25, sine_lookup[pwm_index_a.v] * 0.25, sine_lookup[pwm_index_a.w] * 0.25);
             //  motorA_update_pwm(sine_lookup[pwm_index_a.u] * 0.5, sine_lookup[pwm_index_a.v] * 0.5, sine_lookup[pwm_index_a.w] * 0.5);
             //  motorB_update_pwm(sine_lookup[pwm_index_a.u] * 0.5, sine_lookup[pwm_index_a.v] * 0.5, sine_lookup[pwm_index_a.w] * 0.5);
             motorA_update_pwm(sine_lookup[pwm_index_a.u] * 1, sine_lookup[pwm_index_a.v] * 1, sine_lookup[pwm_index_a.w] * 1);
-            motorB_update_pwm(sine_lookup[pwm_index_a.u] * 1, sine_lookup[pwm_index_a.v] * 1, sine_lookup[pwm_index_a.w] * 1);
+            // motorB_update_pwm(sine_lookup[pwm_index_a.u] * 1, sine_lookup[pwm_index_a.v] * 1, sine_lookup[pwm_index_a.w] * 1);
             DBG_PIN0_CLR();
         }
 
@@ -134,18 +175,10 @@ int main(void)
             string_buffer_append_int16(acc_y);
             string_buffer_send_uart();
             string_buffer_new();
-            string_buffer_append_separator();
-            string_buffer_new();
             string_buffer_append_int16(gyr_z);
             string_buffer_append_new_line();
             string_buffer_send_uart();
             */
-            // Z
-            /*gyr_z = (int16_t)(sens_buffer[12] << 8) + sens_buffer[13];
-            string_buffer_append_int16(gyr_z);
-            string_buffer_append_separator();
-            // string_buffer_append_new_line();
-            string_buffer_send_uart();*/
 
             // calc angles
             angle_acc = (float)atan2((double)acc_x, (double)acc_y);
@@ -154,12 +187,23 @@ int main(void)
             angle_deg = 0.90f * (angle_deg_prev + angle_gyr) + 0.10f * angle_acc;
             angle_deg_prev = angle_deg;
 
-            angle_index = (int16_t)angle_deg;
-            if (angle_index > MOTOR_INDEX_MAX)
+            string_buffer_new();
+            string_buffer_append_int16(angle_index);
+            string_buffer_append_separator();
+            string_buffer_append_int16(motor_index);
+            string_buffer_append_separator();
+            string_buffer_append_int16(motor_index_error);
+            string_buffer_append_separator();
+            string_buffer_append_int16(pwm_index_a.u);
+            string_buffer_append_new_line();
+            string_buffer_send_uart();
+
+            angle_index = ((int16_t)angle_deg) * 8;
+            /*if (angle_index > MOTOR_INDEX_MAX)
                 angle_index = MOTOR_INDEX_MAX;
             if (angle_index < MOTOR_INDEX_MIN)
                 angle_index = MOTOR_INDEX_MIN;
-
+*/
             /*string_buffer_new();
             string_buffer_append_float(angle_acc, 3);
             string_buffer_append_separator();
