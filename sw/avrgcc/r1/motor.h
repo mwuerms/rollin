@@ -23,6 +23,8 @@ void motor_start(void);
 void motorA_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w);
 void motorB_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w);
 void motor_send_event_after_nb_ticks(uint8_t event, uint8_t nb_ticks);
+
+void motorA_speed(int16_t spd_a);
 void motor_stop(void);
 
 #endif /* _MACROS_H_ */

@@ -21,46 +21,16 @@
 #include "mpu6500.h"
 #include "uart.h"
 #include "string_buffer.h"
+#include "pid.h"
 
 /* - defines ---------------------------------------------------------------- */
-typedef struct
-{
-    uint8_t u, v, w;
-} motor_index_t;
 
 /* - public variables ------------------------------------------------------- */
-static uint8_t sine_lookup[] = {127, 135, 143, 151, 159, 167, 175, 183, 190, 197, 204, 210, 216, 222, 227, 232, 236, 240, 244, 247, 249, 251, 252, 253, 254, 253, 252, 251, 249, 247, 244, 240, 236, 232, 227, 222, 216, 210, 204, 197, 190, 183, 175, 167, 159, 151, 143, 135, 127, 118, 110, 102, 94, 86, 78, 70, 63, 56, 49, 43, 37, 31, 26, 21, 17, 13, 9, 6, 4, 2, 1, 0, 0, 0, 1, 2, 4, 6, 9, 13, 17, 21, 26, 31, 37, 43, 49, 56, 63, 70, 78, 86, 94, 102, 110, 118};
-static motor_index_t pwm_index_a = {.u = 0, .v = 32, .w = 64};
-// static uint8_t sine_lookup[] = {127, 143, 159, 175, 190, 204, 216, 227, 236, 244, 249, 252, 254, 252, 249, 244, 236, 227, 216, 204, 190, 175, 159, 143, 127, 110, 94, 78, 63, 49, 37, 26, 17, 9, 4, 1, 0, 1, 4, 9, 17, 26, 37, 49, 63, 78, 94, 110};
-// static motor_index_t pwm_index_a = {.u = 0, .v = 16, .w = 32};
-// static uint8_t sine_lookup[] = {127, 159, 190, 216, 236, 249, 254, 249, 236, 216, 190, 159, 127, 94, 63, 37, 17, 4, 0, 4, 17, 37, 63, 94};
-// static motor_index_t pwm_index_a = {.u = 0, .v = 8, .w = 16};
-// static uint8_t sine_lookup[] = {127, 190, 236, 254, 236, 190, 127, 63, 17, 0, 17, 63};
-// static motor_index_t pwm_index_a = {.u = 0, .v = 4, .w = 8};
-
-static const uint8_t nb_sine_steps = NB_ELEMENTS(sine_lookup);
-
 volatile uint8_t global_events;
 volatile uint8_t global_display_events;
 volatile uint8_t global_button_events;
 
-static uint8_t inc_uint8_max(uint8_t value, uint8_t max)
-{
-    if (value < (max - 1))
-    {
-        return value + 1;
-    }
-    return 0;
-}
-
-static uint8_t dec_uint8_reload(uint8_t value, uint8_t reload)
-{
-    if (value)
-    {
-        return value - 1;
-    }
-    return reload;
-}
+float set_value;
 
 #define DBG_PIN0_OUT() (DDRB |= _BV(4))
 #define DBG_PIN0_SET() (PORTB |= _BV(4))
@@ -76,6 +46,9 @@ int16_t angle_index, motor_index_error, motor_index = 0;
 #define MOTOR_INDEX_MIN -(7 * 48)
 
 #define RAD_TO_DEG (180.0f / M_PI)
+
+uint8_t speed;
+
 /**
  * main loop
  */
@@ -88,19 +61,27 @@ int main(void)
 
     uart_Init(UBRR_VAL_57600);
     uart_puts("rollin am start\n");
+
+    pid_init(1.f, 1.0f, 0.0f);
+
     mpu6500_init();
     mpu6500_set_config();
 
     motor_start();
-    motorA_update_pwm(sine_lookup[pwm_index_a.u], sine_lookup[pwm_index_a.v], sine_lookup[pwm_index_a.w]);
+    motorA_speed(12);
+    // motorA_update_pwm(sine_lookup[pwm_index_a.u], sine_lookup[pwm_index_a.v], sine_lookup[pwm_index_a.w]);
     // wdtTimer_StartTimeout(2, WDT_TIMER_INTERVAL_16MS, EV_READ_SENSOR);
-    wdtTimer_StartTimeout(5, WDT_TIMER_INTERVAL_250MS, EV_READ_SENSOR);
+    // wdtTimer_StartTimeout(5, WDT_TIMER_INTERVAL_250MS, EV_READ_SENSOR);
+    wdtTimer_StartTimeout(60, WDT_TIMER_INTERVAL_1S, EV_UPDATE_PWM);
 
     DBG_PIN0_OUT();
     DBG_PIN0_CLR();
 
     angle_deg_prev = 0.0f;
     motor_index = 0;
+    speed = 0;
+
+    set_value = pid_exec(0.3f, 0.01f);
 
     sei();
 
@@ -111,8 +92,14 @@ int main(void)
         {
             // found 7 pole pairs
             DBG_PIN0_SET();
-            // wdtTimer_StartTimeout(1, WDT_TIMER_INTERVAL_16MS, EV_UPDATE_PWM);
+            wdtTimer_StartTimeout(60, WDT_TIMER_INTERVAL_1S, EV_UPDATE_PWM);
 
+            motorA_speed(speed);
+            speed++;
+            if (speed > 20)
+                speed = 0;
+
+#if 0
             motor_index_error = angle_index - motor_index;
 
             // if (angle_index > 0)
@@ -155,8 +142,9 @@ int main(void)
             // motorB_update_pwm(sine_lookup[pwm_index_a.u] * 0.25, sine_lookup[pwm_index_a.v] * 0.25, sine_lookup[pwm_index_a.w] * 0.25);
             //  motorA_update_pwm(sine_lookup[pwm_index_a.u] * 0.5, sine_lookup[pwm_index_a.v] * 0.5, sine_lookup[pwm_index_a.w] * 0.5);
             //  motorB_update_pwm(sine_lookup[pwm_index_a.u] * 0.5, sine_lookup[pwm_index_a.v] * 0.5, sine_lookup[pwm_index_a.w] * 0.5);
-            motorA_update_pwm(sine_lookup[pwm_index_a.u] * 1, sine_lookup[pwm_index_a.v] * 1, sine_lookup[pwm_index_a.w] * 1);
+            //motorA_update_pwm(sine_lookup[pwm_index_a.u] * 1, sine_lookup[pwm_index_a.v] * 1, sine_lookup[pwm_index_a.w] * 1);
             // motorB_update_pwm(sine_lookup[pwm_index_a.u] * 1, sine_lookup[pwm_index_a.v] * 1, sine_lookup[pwm_index_a.w] * 1);
+#endif
             DBG_PIN0_CLR();
         }
 
@@ -193,8 +181,6 @@ int main(void)
             string_buffer_append_int16(motor_index);
             string_buffer_append_separator();
             string_buffer_append_int16(motor_index_error);
-            string_buffer_append_separator();
-            string_buffer_append_int16(pwm_index_a.u);
             string_buffer_append_new_line();
             string_buffer_send_uart();
 

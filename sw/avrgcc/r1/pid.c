@@ -12,6 +12,7 @@
 static float error_last, out_value;
 static float k_p, k_i, k_d;
 static float i_term, d_term;
+
 // - public functions ----------------------------------------------------------
 
 void pid_init(float kp, float ki, float kd)

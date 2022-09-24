@@ -14,5 +14,6 @@
 // - public functions ----------------------------------------------------------
 
 void pid_init(float kp, float ki, float kd);
+float pid_exec(float error, float delta_t);
 
 #endif // _PID_H_
