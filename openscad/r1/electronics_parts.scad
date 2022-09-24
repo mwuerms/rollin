@@ -40,6 +40,20 @@ module pcbMPU9250mounts(loc_res = 32) {
     cylinder(d = 2, h = 2, $fn = loc_res);
 }
 
+module mpu650pcb(loc_res = 32) {
+    origin();
+    color("Blue")
+    translate([0, 0, 0])
+    cube([16, 14, 1]);
+    color("White")
+    translate([3.5, -2, 1])
+    cube([10, 5.5, 4]);
+    color("Gray")
+    translate([7, 7, 1])
+    cube([4, 4, 1]);
+
+}
+
 module pcbBluePill(loc_res = 32) {
     origin();
     color("Blue") {
