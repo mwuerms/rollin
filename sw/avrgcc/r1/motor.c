@@ -102,6 +102,17 @@ static inline void move_motor_a(void)
     MOTORA_OCR_W = sine_lookup[pwm_index_a.w];
 }
 
+static inline void move_motor_b(void)
+{
+    // use same values
+    // INT(pwm_index_a.u);
+    // INT(pwm_index_a.v);
+    // INT(pwm_index_a.w);
+    MOTORB_OCR_U = sine_lookup[pwm_index_a.u];
+    MOTORB_OCR_V = sine_lookup[pwm_index_a.v];
+    MOTORB_OCR_W = sine_lookup[pwm_index_a.w];
+}
+
 ISR(TIMER1_COMPA_vect)
 {
     if (tim_cnt == 0)
@@ -120,6 +131,7 @@ ISR(TIMER1_COMPA_vect)
         if (speed_a_cnt > speed_a)
         {
             move_motor_a();
+            move_motor_b();
         }
     }
     else

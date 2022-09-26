@@ -22,6 +22,7 @@
 #include "uart.h"
 #include "string_buffer.h"
 #include "pid.h"
+#include "nunchuck.h"
 
 /* - defines ---------------------------------------------------------------- */
 
@@ -67,12 +68,13 @@ int main(void)
     mpu6500_init();
     mpu6500_set_config();
 
+    nunchuck_start_unencrypred();
     motor_start();
     motorA_speed(12);
     // motorA_update_pwm(sine_lookup[pwm_index_a.u], sine_lookup[pwm_index_a.v], sine_lookup[pwm_index_a.w]);
     // wdtTimer_StartTimeout(2, WDT_TIMER_INTERVAL_16MS, EV_READ_SENSOR);
-    // wdtTimer_StartTimeout(5, WDT_TIMER_INTERVAL_250MS, EV_READ_SENSOR);
-    wdtTimer_StartTimeout(60, WDT_TIMER_INTERVAL_1S, EV_UPDATE_PWM);
+    wdtTimer_StartTimeout(5, WDT_TIMER_INTERVAL_250MS, EV_READ_SENSOR);
+    // wdtTimer_StartTimeout(60, WDT_TIMER_INTERVAL_1S, EV_UPDATE_PWM);
 
     DBG_PIN0_OUT();
     DBG_PIN0_CLR();
@@ -152,6 +154,24 @@ int main(void)
         {
             // wdtTimer_StartTimeout(2, WDT_TIMER_INTERVAL_16MS, EV_READ_SENSOR);
             wdtTimer_StartTimeout(5, WDT_TIMER_INTERVAL_250MS, EV_READ_SENSOR);
+            nunchuck_read_raw(sens_buffer, 6);
+            string_buffer_new();
+            string_buffer_append_int8((int8_t)sens_buffer[0]);
+            string_buffer_append_separator();
+            string_buffer_append_int8((int8_t)sens_buffer[1]);
+            string_buffer_append_separator();
+            string_buffer_append_int8((int8_t)sens_buffer[2]);
+            string_buffer_append_separator();
+            string_buffer_send_uart();
+            string_buffer_new();
+            string_buffer_append_int8((int8_t)sens_buffer[3]);
+            string_buffer_append_separator();
+            string_buffer_append_int8((int8_t)sens_buffer[4]);
+            string_buffer_append_separator();
+            string_buffer_append_int8((int8_t)sens_buffer[5]);
+            string_buffer_append_new_line();
+            string_buffer_send_uart();
+#if 0
             // get sensor values
             mpu6500_read_sensor_data(sens_buffer, 14);
             acc_x = (int16_t)(sens_buffer[0] << 8) + sens_buffer[1];
@@ -196,6 +216,7 @@ int main(void)
             string_buffer_append_float(angle_deg, 3);
             string_buffer_append_new_line();
             string_buffer_send_uart();*/
+#endif
         }
 
         while (1)
