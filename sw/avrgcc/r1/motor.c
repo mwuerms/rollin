@@ -92,14 +92,25 @@ static volatile uint8_t tim_cnt = 0;
 static volatile speed_a_cnt, speed_a;
 #define SPEED_A_MAX 16
 
+// factor 256 = 1
+/*#define PWM_SCALE (0.75 * 256)
+static inline uint8_t scale(uint8_t value, uint8_t factor)
+{
+    uint16_t calc = factor * value;
+    return ((uint8_t *)&calc)[0];
+}*/
+
 static inline void move_motor_a(void)
 {
     INT(pwm_index_a.u);
     INT(pwm_index_a.v);
     INT(pwm_index_a.w);
-    MOTORA_OCR_U = sine_lookup[pwm_index_a.u] >> 2;
-    MOTORA_OCR_V = sine_lookup[pwm_index_a.v] >> 2;
-    MOTORA_OCR_W = sine_lookup[pwm_index_a.w] >> 2;
+    // MOTORA_OCR_U = scale(sine_lookup[pwm_index_a.u], PWM_SCALE);
+    // MOTORA_OCR_V = scale(sine_lookup[pwm_index_a.v], PWM_SCALE);
+    // MOTORA_OCR_W = scale(sine_lookup[pwm_index_a.w], PWM_SCALE);
+    MOTORA_OCR_U = sine_lookup[pwm_index_a.u];
+    MOTORA_OCR_V = sine_lookup[pwm_index_a.v];
+    MOTORA_OCR_W = sine_lookup[pwm_index_a.w];
 }
 
 static inline void move_motor_b(void)
@@ -108,9 +119,12 @@ static inline void move_motor_b(void)
     // INT(pwm_index_a.u);
     // INT(pwm_index_a.v);
     // INT(pwm_index_a.w);
-    MOTORB_OCR_U = sine_lookup[pwm_index_a.u] >> 2;
-    MOTORB_OCR_V = sine_lookup[pwm_index_a.v] >> 2;
-    MOTORB_OCR_W = sine_lookup[pwm_index_a.w] >> 2;
+    // MOTORB_OCR_U = scale(sine_lookup[pwm_index_a.u], PWM_SCALE);
+    // MOTORB_OCR_V = scale(sine_lookup[pwm_index_a.v], PWM_SCALE);
+    // MOTORB_OCR_W = scale(sine_lookup[pwm_index_a.w], PWM_SCALE);
+    MOTORB_OCR_U = sine_lookup[pwm_index_a.u];
+    MOTORB_OCR_V = sine_lookup[pwm_index_a.v];
+    MOTORB_OCR_W = sine_lookup[pwm_index_a.w];
 }
 
 ISR(TIMER1_COMPA_vect)

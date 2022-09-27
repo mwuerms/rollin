@@ -156,9 +156,14 @@ int main(void)
             wdtTimer_StartTimeout(25, WDT_TIMER_INTERVAL_250MS, EV_READ_SENSOR);
             nunchuck_read_raw(sens_buffer, 6);
             string_buffer_new();
-            string_buffer_append_int8((int8_t)sens_buffer[0] + 128);
+            // string_buffer_append_int8((int8_t)sens_buffer[0] + 128);
+            string_buffer_append_uint8(sens_buffer[0]);
             string_buffer_append_separator();
-            string_buffer_append_int8((int8_t)sens_buffer[1] + 128);
+            // string_buffer_append_int8((int8_t)sens_buffer[1] + 128);
+            string_buffer_append_uint8(sens_buffer[1]);
+            string_buffer_append_separator();
+            speed = 21 - (sens_buffer[1] - 128) / 6;
+            string_buffer_append_uint8(speed);
             string_buffer_append_separator();
             string_buffer_append_int8((int8_t)sens_buffer[2]);
             string_buffer_append_separator();
@@ -171,6 +176,9 @@ int main(void)
             string_buffer_append_int8((int8_t)sens_buffer[5]);
             string_buffer_append_new_line();
             string_buffer_send_uart();
+
+            motorA_speed(speed);
+
 #if 0
             // get sensor values
             mpu6500_read_sensor_data(sens_buffer, 14);
