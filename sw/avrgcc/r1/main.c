@@ -153,12 +153,12 @@ int main(void)
         if (local_events & EV_READ_SENSOR)
         {
             // wdtTimer_StartTimeout(2, WDT_TIMER_INTERVAL_16MS, EV_READ_SENSOR);
-            wdtTimer_StartTimeout(5, WDT_TIMER_INTERVAL_250MS, EV_READ_SENSOR);
+            wdtTimer_StartTimeout(25, WDT_TIMER_INTERVAL_250MS, EV_READ_SENSOR);
             nunchuck_read_raw(sens_buffer, 6);
             string_buffer_new();
-            string_buffer_append_int8((int8_t)sens_buffer[0]);
+            string_buffer_append_int8((int8_t)sens_buffer[0] + 128);
             string_buffer_append_separator();
-            string_buffer_append_int8((int8_t)sens_buffer[1]);
+            string_buffer_append_int8((int8_t)sens_buffer[1] + 128);
             string_buffer_append_separator();
             string_buffer_append_int8((int8_t)sens_buffer[2]);
             string_buffer_append_separator();

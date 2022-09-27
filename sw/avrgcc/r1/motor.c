@@ -86,7 +86,7 @@ static uint8_t dec_uint8_reload(uint8_t value, uint8_t reload)
 }
 
 static volatile uint8_t tim_cnt = 0;
-#define TIM_CNT_RELOAD 16 // all OK: 8 // 16 // 32 // 62
+#define TIM_CNT_RELOAD 62 // all OK: 8 // 16 // 32 // 62
 // tested: 8 is the fastest!
 
 static volatile speed_a_cnt, speed_a;
@@ -97,9 +97,9 @@ static inline void move_motor_a(void)
     INT(pwm_index_a.u);
     INT(pwm_index_a.v);
     INT(pwm_index_a.w);
-    MOTORA_OCR_U = sine_lookup[pwm_index_a.u];
-    MOTORA_OCR_V = sine_lookup[pwm_index_a.v];
-    MOTORA_OCR_W = sine_lookup[pwm_index_a.w];
+    MOTORA_OCR_U = sine_lookup[pwm_index_a.u] >> 2;
+    MOTORA_OCR_V = sine_lookup[pwm_index_a.v] >> 2;
+    MOTORA_OCR_W = sine_lookup[pwm_index_a.w] >> 2;
 }
 
 static inline void move_motor_b(void)
@@ -108,9 +108,9 @@ static inline void move_motor_b(void)
     // INT(pwm_index_a.u);
     // INT(pwm_index_a.v);
     // INT(pwm_index_a.w);
-    MOTORB_OCR_U = sine_lookup[pwm_index_a.u];
-    MOTORB_OCR_V = sine_lookup[pwm_index_a.v];
-    MOTORB_OCR_W = sine_lookup[pwm_index_a.w];
+    MOTORB_OCR_U = sine_lookup[pwm_index_a.u] >> 2;
+    MOTORB_OCR_V = sine_lookup[pwm_index_a.v] >> 2;
+    MOTORB_OCR_W = sine_lookup[pwm_index_a.w] >> 2;
 }
 
 ISR(TIMER1_COMPA_vect)
