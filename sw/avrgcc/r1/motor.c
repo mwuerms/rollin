@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/atomic.h>
 
 #include "project.h"
 #include "io.h"
@@ -93,24 +94,24 @@ static volatile speed_a_cnt, speed_a;
 #define SPEED_A_MAX 16
 
 // factor 256 = 1
-/*#define PWM_SCALE (0.75 * 256)
+#define PWM_SCALE (0.75 * 256)
 static inline uint8_t scale(uint8_t value, uint8_t factor)
 {
     uint16_t calc = factor * value;
-    return ((uint8_t *)&calc)[0];
-}*/
+    return ((uint8_t *)&calc)[1];
+}
 
 static inline void move_motor_a(void)
 {
     INT(pwm_index_a.u);
     INT(pwm_index_a.v);
     INT(pwm_index_a.w);
-    // MOTORA_OCR_U = scale(sine_lookup[pwm_index_a.u], PWM_SCALE);
-    // MOTORA_OCR_V = scale(sine_lookup[pwm_index_a.v], PWM_SCALE);
-    // MOTORA_OCR_W = scale(sine_lookup[pwm_index_a.w], PWM_SCALE);
-    MOTORA_OCR_U = sine_lookup[pwm_index_a.u];
+    MOTORA_OCR_U = scale(sine_lookup[pwm_index_a.u], PWM_SCALE);
+    MOTORA_OCR_V = scale(sine_lookup[pwm_index_a.v], PWM_SCALE);
+    MOTORA_OCR_W = scale(sine_lookup[pwm_index_a.w], PWM_SCALE);
+    /*MOTORA_OCR_U = sine_lookup[pwm_index_a.u];
     MOTORA_OCR_V = sine_lookup[pwm_index_a.v];
-    MOTORA_OCR_W = sine_lookup[pwm_index_a.w];
+    MOTORA_OCR_W = sine_lookup[pwm_index_a.w];*/
 }
 
 static inline void move_motor_b(void)
@@ -119,15 +120,15 @@ static inline void move_motor_b(void)
     // INT(pwm_index_a.u);
     // INT(pwm_index_a.v);
     // INT(pwm_index_a.w);
-    // MOTORB_OCR_U = scale(sine_lookup[pwm_index_a.u], PWM_SCALE);
-    // MOTORB_OCR_V = scale(sine_lookup[pwm_index_a.v], PWM_SCALE);
-    // MOTORB_OCR_W = scale(sine_lookup[pwm_index_a.w], PWM_SCALE);
-    MOTORB_OCR_U = sine_lookup[pwm_index_a.u];
+    MOTORB_OCR_U = scale(sine_lookup[pwm_index_a.u], PWM_SCALE);
+    MOTORB_OCR_V = scale(sine_lookup[pwm_index_a.v], PWM_SCALE);
+    MOTORB_OCR_W = scale(sine_lookup[pwm_index_a.w], PWM_SCALE);
+    /*MOTORB_OCR_U = sine_lookup[pwm_index_a.u];
     MOTORB_OCR_V = sine_lookup[pwm_index_a.v];
-    MOTORB_OCR_W = sine_lookup[pwm_index_a.w];
+    MOTORB_OCR_W = sine_lookup[pwm_index_a.w];*/
 }
 
-ISR(TIMER1_COMPA_vect)
+ISR(TIMER1_OVF_vect)
 {
     if (tim_cnt == 0)
     {
@@ -151,6 +152,25 @@ ISR(TIMER1_COMPA_vect)
     else
     {
         tim_cnt--;
+    }
+}
+
+static volatile uint8_t tim0_event_to_send;
+static volatile uint16_t tim0_ticks_cnt_dwn;
+ISR(TIMER0_OVF_vect)
+{
+    if (tim0_ticks_cnt_dwn == 0)
+    {
+        if (tim0_event_to_send)
+        {
+            TIMSK0 = 0;
+            SEND_EVENT(tim0_event_to_send);
+            tim0_event_to_send = 0;
+        }
+    }
+    else
+    {
+        tim0_ticks_cnt_dwn--;
     }
 }
 
@@ -193,8 +213,12 @@ void motor_start(void)
     uart_puts("motor_start()\n");
     // enable interrupt
     tim_cnt = TIM_CNT_RELOAD;
-    TIFR1 |= (1 << OCF1A);
-    TIMSK1 |= (1 << OCIE1A);
+    // TIMER1_COMPA_vect
+    // TIFR1 |= (1 << OCF1A);
+    // TIMSK1 |= (1 << OCIE1A);
+    // TIMER1_OVF_vect
+    TIFR1 |= (1 << TOV1);
+    TIMSK1 |= (1 << TOIE1);
 }
 
 void motorA_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w)
@@ -203,15 +227,6 @@ void motorA_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w)
     MOTORA_OCR_U = pwm_u;
     MOTORA_OCR_V = pwm_v;
     MOTORA_OCR_W = pwm_w;
-    /*
-        string_buffer_new();
-        string_buffer_append_uint8(pwm_u);
-        string_buffer_append_separator();
-        string_buffer_append_uint8(pwm_v);
-        string_buffer_append_separator();
-        string_buffer_append_uint8(pwm_w);
-        string_buffer_append_new_line();
-        string_buffer_send_uart();*/
 }
 
 void motorB_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w)
@@ -219,25 +234,30 @@ void motorB_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w)
     MOTORB_OCR_U = pwm_u;
     MOTORB_OCR_V = pwm_v;
     MOTORB_OCR_W = pwm_w;
-    /*
-        string_buffer_new();
-        string_buffer_append_uint8(pwm_u);
-        string_buffer_append_separator();
-        string_buffer_append_uint8(pwm_v);
-        string_buffer_append_separator();
-        string_buffer_append_uint8(pwm_w);
-        string_buffer_append_new_line();
-        string_buffer_send_uart();*/
 }
 
-void motor_send_event_after_nb_ticks(uint8_t event, uint8_t nb_ticks)
+// f = 62500 Hz
+void motor_send_event_after_nb_ticks(uint16_t nb_ticks, uint8_t event)
 {
+    TIMSK0 = 0;
+
+    tim0_ticks_cnt_dwn = nb_ticks;
+    tim0_event_to_send = event;
+
+    // TIMER0_OVF_vect
+    TIFR0 |= (1 << TOV0);
+    TIMSK0 |= (1 << TOIE0);
 }
 
 void motorA_speed(int16_t spd_a)
 {
+    uint8_t sreg = SREG;
+    cli();
+
     speed_a_cnt = SPEED_A_MAX;
     speed_a = spd_a;
+
+    SREG = sreg;
 }
 
 void motor_stop(void)

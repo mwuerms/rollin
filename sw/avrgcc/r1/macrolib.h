@@ -33,4 +33,5 @@
     } while (0)
 
 #define NB_ELEMENTS(a) (sizeof(a) / sizeof(a[0]))
+
 #endif /* _MACROS_H_ */

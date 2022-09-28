@@ -22,7 +22,7 @@ void motor_start(void);
 // idea: set torque in 0 (min, 0) ... 1 (max, 256) in uint8_t, use fixed point to get result in uint16_t, use high byte
 void motorA_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w);
 void motorB_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w);
-void motor_send_event_after_nb_ticks(uint8_t event, uint8_t nb_ticks);
+void motor_send_event_after_nb_ticks(uint16_t nb_ticks, uint8_t event);
 
 void motorA_speed(int16_t spd_a);
 void motor_stop(void);
