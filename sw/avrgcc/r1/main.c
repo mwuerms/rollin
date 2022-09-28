@@ -31,7 +31,7 @@ volatile uint8_t global_events;
 volatile uint8_t global_display_events;
 volatile uint8_t global_button_events;
 
-float set_value;
+float pid_return_value;
 
 #define DBG_PIN0_OUT() (DDRB |= _BV(4))
 #define DBG_PIN0_SET() (PORTB |= _BV(4))
@@ -40,7 +40,7 @@ float set_value;
 uint8_t sens_buffer[16];
 int16_t acc_x, acc_y, gyr_z;
 
-float angle_acc, angle_gyr, angle_deg, angle_deg_prev;
+float angle_acc, angle_gyr, angle_deg, angle_deg_prev, angle_error_deg;
 
 int16_t angle_index, motor_index_error, motor_index = 0;
 #define MOTOR_INDEX_MAX ((7 * 48) - 1)
@@ -48,7 +48,7 @@ int16_t angle_index, motor_index_error, motor_index = 0;
 
 #define RAD_TO_DEG (180.0f / M_PI)
 
-uint8_t speed;
+int8_t speed;
 
 /**
  * main loop
@@ -63,26 +63,24 @@ int main(void)
     uart_Init(UBRR_VAL_57600);
     uart_puts("rollin am start\n");
 
-    pid_init(1.f, 1.0f, 0.0f);
+    // pid_init(2.5f, 0.0f, 0.0f); // not bad
+    pid_init(1.5f, 0.0f, 0.003f);
 
     mpu6500_init();
     mpu6500_set_config();
 
     nunchuck_start_unencrypred();
     motor_start();
-    motorA_speed(12);
-    // motorA_update_pwm(sine_lookup[pwm_index_a.u], sine_lookup[pwm_index_a.v], sine_lookup[pwm_index_a.w]);
-    // wdtTimer_StartTimeout(2, WDT_TIMER_INTERVAL_16MS, EV_READ_SENSOR);
-    wdtTimer_StartTimeout(60, WDT_TIMER_INTERVAL_1S, EV_UPDATE_PWM);
-    motor_send_event_after_nb_ticks(625, EV_READ_SENSOR); // 10 ms
+    // motor_send_event_after_nb_ticks(625, EV_READ_SENSOR); // 10 ms
+    // motor_send_event_after_nb_ticks(468, EV_READ_SENSOR); // 7.5 ms
+    motor_send_event_after_nb_ticks(62500 / 2, EV_UPDATE_PWM); // 500 ms
+
     DBG_PIN0_OUT();
     DBG_PIN0_CLR();
 
     angle_deg_prev = 0.0f;
     motor_index = 0;
     speed = 0;
-
-    set_value = pid_exec(0.3f, 0.01f);
 
     sei();
 
@@ -91,14 +89,20 @@ int main(void)
     {
         if (local_events & EV_UPDATE_PWM)
         {
+            motor_send_event_after_nb_ticks(62500 / 2, EV_UPDATE_PWM); // 500 ms
             // found 7 pole pairs
             DBG_PIN0_SET();
             wdtTimer_StartTimeout(60, WDT_TIMER_INTERVAL_1S, EV_UPDATE_PWM);
 
-            motorA_speed(speed);
+            motor_set_speed(speed);
+            string_buffer_new();
+            string_buffer_append_int8(speed);
+            string_buffer_append_new_line();
+            string_buffer_send_uart();
+
             speed++;
             if (speed > 20)
-                speed = 0;
+                speed = -20;
 
             DBG_PIN0_CLR();
         }
@@ -106,7 +110,8 @@ int main(void)
         if (local_events & EV_READ_SENSOR)
         {
             // wdtTimer_StartTimeout(2, WDT_TIMER_INTERVAL_16MS, EV_READ_SENSOR);
-            motor_send_event_after_nb_ticks(625, EV_READ_SENSOR); // 10 ms
+            // motor_send_event_after_nb_ticks(625, EV_READ_SENSOR); // 10 ms
+            motor_send_event_after_nb_ticks(468, EV_READ_SENSOR); // 7.5 ms
 
             // get sensor values
             mpu6500_read_sensor_data(sens_buffer, 14);
@@ -117,20 +122,34 @@ int main(void)
             // calc angles
             angle_acc = (float)atan2((double)acc_x, (double)acc_y);
             angle_acc *= RAD_TO_DEG;
-            angle_gyr = (((float)gyr_z) / 250.0f) * 0.010f; // 0.0477455f; // gyr_z_rate_dps * sample_rate_ps
+            // angle_gyr = (((float)gyr_z) / 250.0f) * 0.010f; // 0.0477455f; // gyr_z_rate_dps * sample_rate_ps
+            angle_gyr = (((float)gyr_z) / 250.0f) * 0.0075f; // gyr_z_rate_dps * sample_rate_ps
             angle_deg = 0.90f * (angle_deg_prev + angle_gyr) + 0.10f * angle_acc;
             angle_deg_prev = angle_deg;
+
+            angle_error_deg = 0.0f - angle_deg;
+            // pid_return_value = pid_exec(angle_error_deg, 0.01f);
+            pid_return_value = pid_exec(angle_error_deg, 1); // 0.0075f);
+
+            speed = (int8_t)pid_return_value;
 
             string_buffer_new();
             string_buffer_append_float(angle_deg, 3);
             /*string_buffer_append_separator();
-            string_buffer_append_int16(motor_index);
+            string_buffer_append_float(angle_error_deg, 3);
             string_buffer_append_separator();
-            string_buffer_append_int16(motor_index_error);*/
+            string_buffer_append_float(pid_return_value, 3);*/
+            string_buffer_append_separator();
+            string_buffer_append_int8(speed);
             string_buffer_append_new_line();
             string_buffer_send_uart();
 
-            angle_index = ((int16_t)angle_deg) * 8;
+            // angle_index = ((int16_t)angle_deg) * 8;
+            /*if (speed > 5)
+                speed = 5;
+            if (speed < -5)
+                speed = -5;*/
+            motor_set_speed(speed);
 
             nunchuck_read_raw(sens_buffer, 6);
         }

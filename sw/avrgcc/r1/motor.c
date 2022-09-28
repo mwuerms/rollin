@@ -59,13 +59,22 @@ static const uint8_t nb_sine_steps = NB_ELEMENTS(sine_lookup);
 
 // - private functions ---------------------------------------------------------
 
-#define INT(x)                            \
+#define INC(x)                            \
     do                                    \
     {                                     \
         if (x < NB_ELEMENTS(sine_lookup)) \
             x++;                          \
         else                              \
             x = 0;                        \
+    } while (0)
+
+#define DEC(x)                            \
+    do                                    \
+    {                                     \
+        if (x == 0)                       \
+            x = NB_ELEMENTS(sine_lookup); \
+        else                              \
+            x--;                          \
     } while (0)
 
 static uint8_t inc_uint8_max(uint8_t value, uint8_t max)
@@ -90,31 +99,44 @@ static volatile uint8_t tim_cnt = 0;
 #define TIM_CNT_RELOAD 62 // all OK: 8 // 16 // 32 // 62
 // tested: 8 is the fastest!
 
-static volatile speed_a_cnt, speed_a;
+static volatile uint8_t speed_a_cnt, speed_a;
 #define SPEED_A_MAX 16
 
 // factor 256 = 1
-#define PWM_SCALE (0.75 * 256)
+#define PWM_SCALE (0.65 * 256)
 static inline uint8_t scale(uint8_t value, uint8_t factor)
 {
     uint16_t calc = factor * value;
     return ((uint8_t *)&calc)[1];
 }
 
-static inline void move_motor_a(void)
+static volatile uint8_t motor_move_dir = 0; // 1: foreward: INC, 0: backwards: DEC
+static inline move_motor(void)
 {
-    INT(pwm_index_a.u);
-    INT(pwm_index_a.v);
-    INT(pwm_index_a.w);
+    if (motor_move_dir == 0)
+    {
+        // backwards
+        DEC(pwm_index_a.u);
+        DEC(pwm_index_a.v);
+        DEC(pwm_index_a.w);
+    }
+    else
+    {
+        // forewards
+        INC(pwm_index_a.u);
+        INC(pwm_index_a.v);
+        INC(pwm_index_a.w);
+    }
+}
+
+static inline void set_motor_a(void)
+{
     MOTORA_OCR_U = scale(sine_lookup[pwm_index_a.u], PWM_SCALE);
     MOTORA_OCR_V = scale(sine_lookup[pwm_index_a.v], PWM_SCALE);
     MOTORA_OCR_W = scale(sine_lookup[pwm_index_a.w], PWM_SCALE);
-    /*MOTORA_OCR_U = sine_lookup[pwm_index_a.u];
-    MOTORA_OCR_V = sine_lookup[pwm_index_a.v];
-    MOTORA_OCR_W = sine_lookup[pwm_index_a.w];*/
 }
 
-static inline void move_motor_b(void)
+static inline void set_motor_b(void)
 {
     // use same values
     // INT(pwm_index_a.u);
@@ -123,9 +145,6 @@ static inline void move_motor_b(void)
     MOTORB_OCR_U = scale(sine_lookup[pwm_index_a.u], PWM_SCALE);
     MOTORB_OCR_V = scale(sine_lookup[pwm_index_a.v], PWM_SCALE);
     MOTORB_OCR_W = scale(sine_lookup[pwm_index_a.w], PWM_SCALE);
-    /*MOTORB_OCR_U = sine_lookup[pwm_index_a.u];
-    MOTORB_OCR_V = sine_lookup[pwm_index_a.v];
-    MOTORB_OCR_W = sine_lookup[pwm_index_a.w];*/
 }
 
 ISR(TIMER1_OVF_vect)
@@ -143,10 +162,11 @@ ISR(TIMER1_OVF_vect)
         {
             speed_a_cnt--;
         }
-        if (speed_a_cnt > speed_a)
+        if (speed_a_cnt < speed_a)
         {
-            move_motor_a();
-            move_motor_b();
+            move_motor();
+            set_motor_a();
+            set_motor_b();
         }
     }
     else
@@ -221,21 +241,6 @@ void motor_start(void)
     TIMSK1 |= (1 << TOIE1);
 }
 
-void motorA_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w)
-{
-    // idea: calc torque factor at this point, eg: 0 (0) ... 1 (256)
-    MOTORA_OCR_U = pwm_u;
-    MOTORA_OCR_V = pwm_v;
-    MOTORA_OCR_W = pwm_w;
-}
-
-void motorB_update_pwm(uint8_t pwm_u, uint8_t pwm_v, uint8_t pwm_w)
-{
-    MOTORB_OCR_U = pwm_u;
-    MOTORB_OCR_V = pwm_v;
-    MOTORB_OCR_W = pwm_w;
-}
-
 // f = 62500 Hz
 void motor_send_event_after_nb_ticks(uint16_t nb_ticks, uint8_t event)
 {
@@ -249,13 +254,24 @@ void motor_send_event_after_nb_ticks(uint16_t nb_ticks, uint8_t event)
     TIMSK0 |= (1 << TOIE0);
 }
 
-void motorA_speed(int16_t spd_a)
+void motor_set_speed(int8_t set_speed)
 {
     uint8_t sreg = SREG;
     cli();
 
     speed_a_cnt = SPEED_A_MAX;
-    speed_a = spd_a;
+    if (set_speed < 0)
+    {
+        // backwards
+        motor_move_dir = 0;
+        set_speed *= -1;
+    }
+    else
+    {
+        // forewards
+        motor_move_dir = 1;
+    }
+    speed_a = set_speed;
 
     SREG = sreg;
 }
