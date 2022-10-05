@@ -7,6 +7,7 @@
 //
 
 #include "i2c.h"
+#include "uart.h"
 
 #if defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) ||                                                                \
     defined(__AVR_ATmega168P__) || defined(__AVR_ATmega168PA__) ||                                                              \
@@ -36,6 +37,7 @@ uint8_t I2C_ErrorCode;
  **********************************************/
 void i2c_init(void)
 {
+    TWCR = 0;
     // set clock
     switch (PSC_I2C)
     {
@@ -81,7 +83,7 @@ void i2c_start(uint8_t i2c_addr)
             return;
         }
     };
-    // send adress
+    //  send adress
     TWDR = i2c_addr;
     TWCR = (1 << TWINT) | (1 << TWEN);
     timeout = F_CPU / F_I2C * 2.0;
@@ -191,6 +193,92 @@ uint8_t i2c_readNAck(void)
     };
     return TWDR;
 }
+
+// i2c functions ---------------------------------------------------------------
+#define I2C_READ (1)
+#define I2C_WRITE (0)
+uint8_t i2c_write_reg_addr(uint8_t i2c_addr, uint8_t reg_addr)
+{
+    I2C_ErrorCode = 0;
+    i2c_start(i2c_addr | I2C_WRITE);
+    if (I2C_ErrorCode)
+    {
+        // error
+        i2c_stop();
+        return 0;
+    }
+    I2C_ErrorCode = 0;
+    i2c_byte(reg_addr);
+    if (I2C_ErrorCode)
+    {
+        // error
+        return 0;
+    }
+    i2c_stop();
+    return 1;
+}
+
+uint8_t i2c_write_buffer(uint8_t i2c_addr, uint8_t *buffer, uint8_t length)
+{
+    uint8_t n;
+
+    I2C_ErrorCode = 0;
+    i2c_start(i2c_addr | I2C_WRITE);
+    if (I2C_ErrorCode)
+    {
+        // error
+        i2c_stop();
+        return 0;
+    }
+    for (n = 0; n < length; n++)
+    {
+        I2C_ErrorCode = 0;
+        i2c_byte(buffer[n]);
+        if (I2C_ErrorCode)
+        {
+            // error
+            break;
+        }
+    }
+    i2c_stop();
+    return n;
+}
+
+uint8_t i2c_read_buffer(uint8_t i2c_addr, uint8_t *buffer, uint8_t length)
+{
+    uint8_t n;
+
+    I2C_ErrorCode = 0;
+    i2c_start(i2c_addr | I2C_READ);
+    if (I2C_ErrorCode)
+    {
+        // error
+        i2c_stop();
+        return 0;
+    }
+    for (n = 0; n < length; n++)
+    {
+        I2C_ErrorCode = 0;
+        if (n < (length - 1))
+        {
+            // always send ACK except for last read byte
+            buffer[n] = i2c_readAck();
+        }
+        else
+        {
+            // send NACK at last read byte
+            buffer[n] = i2c_readNAck();
+        }
+        if (I2C_ErrorCode)
+        {
+            // error
+            break;
+        }
+    }
+    i2c_stop();
+    return n;
+}
+
 #else
 #error "Micorcontroller not supported now!"
 #endif

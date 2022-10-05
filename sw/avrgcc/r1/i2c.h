@@ -40,6 +40,10 @@ extern "C"
 	uint8_t i2c_readAck(void);	// read byte with ACK
 	uint8_t i2c_readNAck(void); // read byte with NACK
 
+	uint8_t i2c_write_reg_addr(uint8_t i2c_addr, uint8_t reg_addr);				 // ret 1: OK, 1 byte written
+	uint8_t i2c_write_buffer(uint8_t i2c_addr, uint8_t *buffer, uint8_t length); // return nb bytes written
+	uint8_t i2c_read_buffer(uint8_t i2c_addr, uint8_t *buffer, uint8_t length);	 // return nb bytes read
+
 #ifdef __cplusplus
 }
 #endif

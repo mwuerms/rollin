@@ -40,6 +40,70 @@ module pcbMPU9250mounts(loc_res = 32) {
     cylinder(d = 2, h = 2, $fn = loc_res);
 }
 
+module mpu650pcb(loc_res = 32) {
+    origin();
+    color("Blue")
+    translate([0, 0, 0])
+    cube([16, 14, 1]);
+    color("White")
+    translate([3.5, -2, 1])
+    cube([10, 5.5, 4]);
+    color("Gray")
+    translate([7, 7, 1])
+    cube([4, 4, 1]);
+}
+
+module gimbal_arduino_v3_0_pcb(loc_res = 32) {
+    origin();
+    // PCB
+    difference() {
+        union() {
+            color("Blue")
+            translate([0, 0, 0])
+            cube([51, 52, 1.6]);
+
+            color("Silver")
+            translate([2.4, 4, -0.05])
+            cylinder(d=4, h = 1.7, $fn = loc_res);
+            color("Silver")
+            translate([51-3.4, 4, -0.05])
+            cylinder(d=4, h = 1.7, $fn = loc_res);
+            color("Silver")
+            translate([2.4, 52-3, -0.05])
+            cylinder(d=4, h = 1.7, $fn = loc_res);
+            color("Silver")
+            translate([51-3.4, 52-3, -0.05])
+            cylinder(d=4, h = 1.7, $fn = loc_res);
+        }
+        translate([2.4, 4, -0.1])
+        cylinder(d=3.4, h = 1.8, $fn = loc_res);
+        translate([51-3.4, 4, -0.1])
+        cylinder(d=3.4, h = 1.8, $fn = loc_res);
+        translate([2.4, 52-3, -0.1])
+        cylinder(d=3.4, h = 1.8, $fn = loc_res);
+        translate([51-3.4, 52-3, -0.1])
+        cylinder(d=3.4, h = 1.8, $fn = loc_res);
+    }
+    // mini USB
+    color("Silver")
+    translate([35, -2, 1.5])
+    cube([7.5, 9, 4]);
+    // i2c - mpu650
+    color("White")
+    translate([3.5, -2, 1])
+    cube([10, 5.5, 4]);
+    // MCU
+    color("Gray")
+    translate([14, 13, 1.6])
+    cube([7, 7, 1]);
+
+    // 6xMOSFET
+    color("Gray")
+    for(n=[0:1:5])
+    translate([10+n*6, 40, 1.6])
+    cube([5, 4, 1]);
+}
+
 module pcbBluePill(loc_res = 32) {
     origin();
     color("Blue") {
