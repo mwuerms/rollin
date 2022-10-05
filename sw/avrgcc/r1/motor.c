@@ -96,14 +96,14 @@ static uint8_t dec_uint8_reload(uint8_t value, uint8_t reload)
 }
 
 static volatile uint8_t tim_cnt = 0;
-#define TIM_CNT_RELOAD 62 // all OK: 8 // 16 // 32 // 62
+#define TIM_CNT_RELOAD 32 // all OK: 8 // 16 // 32 // 62
 // tested: 8 is the fastest!
 
 static volatile uint8_t speed_a_cnt, speed_a;
 #define SPEED_A_MAX 16
 
 // factor 256 = 1
-#define PWM_SCALE (0.65 * 256)
+#define PWM_SCALE (0.6666667 * 256)
 static inline uint8_t scale(uint8_t value, uint8_t factor)
 {
     uint16_t calc = factor * value;

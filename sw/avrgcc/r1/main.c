@@ -64,16 +64,17 @@ int main(void)
     uart_puts("rollin am start\n");
 
     // pid_init(2.5f, 0.0f, 0.0f); // not bad
-    pid_init(1.5f, 0.0f, 0.003f);
+    pid_init(1.45f, 0.0f, 0.0035f);
 
     mpu6500_init();
     mpu6500_set_config();
 
     nunchuck_start_unencrypred();
     motor_start();
+    motor_set_speed(1);
     // motor_send_event_after_nb_ticks(625, EV_READ_SENSOR); // 10 ms
     // motor_send_event_after_nb_ticks(468, EV_READ_SENSOR); // 7.5 ms
-    motor_send_event_after_nb_ticks(62500 / 2, EV_UPDATE_PWM); // 500 ms
+    //  motor_send_event_after_nb_ticks(62500 / 2, EV_UPDATE_PWM); // 500 ms
 
     DBG_PIN0_OUT();
     DBG_PIN0_CLR();
@@ -124,7 +125,7 @@ int main(void)
             angle_acc *= RAD_TO_DEG;
             // angle_gyr = (((float)gyr_z) / 250.0f) * 0.010f; // 0.0477455f; // gyr_z_rate_dps * sample_rate_ps
             angle_gyr = (((float)gyr_z) / 250.0f) * 0.0075f; // gyr_z_rate_dps * sample_rate_ps
-            angle_deg = 0.90f * (angle_deg_prev + angle_gyr) + 0.10f * angle_acc;
+            angle_deg = 0.95f * (angle_deg_prev + angle_gyr) + 0.05f * angle_acc;
             angle_deg_prev = angle_deg;
 
             angle_error_deg = 0.0f - angle_deg;
