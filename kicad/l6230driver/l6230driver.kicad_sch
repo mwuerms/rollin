@@ -1015,7 +1015,6 @@
     )
   )
 
-
   (junction (at 49.53 157.48) (diameter 0) (color 0 0 0 0)
     (uuid 03378190-cdd7-4cba-bea4-9c9db1a4c95d)
   )
@@ -2044,7 +2043,7 @@
     (uuid 00000000-0000-0000-0000-00006317826e)
     (property "Reference" "U1" (id 0) (at 133.35 40.259 0))
     (property "Value" "L6230PD" (id 1) (at 133.35 42.5704 0))
-    (property "Footprint" "Package_SO:HSOP-36-1EP_11.0x15.9mm_P0.65mm_SlugDown_ThermalVias" (id 2) (at 151.13 90.17 0)
+    (property "Footprint" "L6230:HSOP-36" (id 2) (at 151.13 90.17 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "" (id 3) (at 151.13 90.17 0)
@@ -3911,7 +3910,7 @@
       (reference "R27") (unit 1) (value "1k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00006317826e"
-      (reference "U1") (unit 1) (value "L6230PD") (footprint "Package_SO:HSOP-36-1EP_11.0x15.9mm_P0.65mm_SlugDown_ThermalVias")
+      (reference "U1") (unit 1) (value "L6230PD") (footprint "L6230:HSOP-36")
     )
     (path "/00000000-0000-0000-0000-0000633d9825"
       (reference "U2") (unit 1) (value "MCP6004T-I/SL") (footprint "Package_SO:SOIC-14_3.9x8.7mm_P1.27mm")
