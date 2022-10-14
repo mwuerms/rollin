@@ -9,49 +9,67 @@ use <screws.scad>
 
 module lego_axis_cut(len = 10) {
     hull() {
-        translate([-1.15, -1.0, 0]) 
-        cube([2.3, 2.0, len]);
-        translate([-1.0, -1.15, 0]) 
-        cube([2.0, 2.3, len]);
+        translate([-1.0, -0.9, 0]) 
+        cube([2.0, 1.8, len]);
+        translate([-0.9, -1.0, 0]) 
+        cube([1.8, 2.0, len]);
     }
     hull() {
-        translate([-2.5, -0.8, 0]) 
-        cube([5.0, 1.6, len]);
-        translate([-2.3, -1.0, 0]) 
-        cube([4.6, 2.0, len]);
+        translate([-2.4, -0.7, 0]) 
+        cube([4.8, 1.4, len]);
+        translate([-2.2, -0.9, 0]) 
+        cube([4.4, 1.8, len]);
     }
     hull() {
-        translate([-1.0, -2.3, 0]) 
-        cube([2.0, 4.6, len]);
-        translate([-0.8, -2.5, 0]) 
-        cube([1.6, 5.0, len]);
+        translate([-0.9, -2.2, 0]) 
+        cube([1.8, 4.4, len]);
+        translate([-0.7, -2.4, 0]) 
+        cube([1.4, 4.8, len]);
     }
 }
 
-module bldc5010_m3cut_rotor(show = 1, loc_res = 32) {
+module bldc5010_m3cut_rotor(show = 1, len = 10, loc_res = 32) {
     if(show) {
         origin();
     }
     r1 = (15+9.6)/2/2;
     for(n=[0:1:3]) {
-        translate([r1*cos(n*90), r1*sin(n*90), 0]) 
-        cylinder(d = 3, h = 6, $fn = loc_res);
+        translate([r1*cos(n*90), r1*sin(n*90), 0]) {
+            translate([0, 0, -len]) 
+            cylinder(d = 3.1, h = len, $fn = loc_res);
+            translate([0, 0, 0]) 
+            cylinder(d1 = 3.1, d2= 6.0, h = 1.5, $fn = loc_res);
+            translate([0, 0, 1.5]) 
+            cylinder(d = 6.0, h = len, $fn = loc_res);
+        }
     }
 }
 
-module bldc5010_m3cut_stator(show = 1, loc_res = 32) {
+module bldc5010_m3cut_stator(show = 1, len = 10, loc_res = 32) {
     if(show) {
         origin();
     }
     r1 = (19+13.4)/2/2;
     for(n=[0:2:3]) {
-        translate([r1*cos(n*90), r1*sin(n*90), 0]) 
-        cylinder(d = 3, h = 10, $fn = loc_res);
+        translate([r1*cos(n*90), r1*sin(n*90), 0]) {
+            translate([0, 0, 0]) 
+            cylinder(d = 3.1, h = len, $fn = loc_res);
+            translate([0, 0, -1.5]) 
+            cylinder(d2 = 3.1, d1= 6.0, h = 1.5, $fn = loc_res);
+            translate([0, 0, -(len+1.5)]) 
+            cylinder(d = 6.0, h = len, $fn = loc_res);
+        }
     }
     r2 = (22+16.6)/2/2;
     for(n=[1:2:3]) {
-        translate([r2*cos(n*90), r2*sin(n*90), 0]) 
-        cylinder(d = 3, h = 6, $fn = loc_res);
+        translate([r2*cos(n*90), r2*sin(n*90), 0]) {
+            translate([0, 0, 0]) 
+            cylinder(d = 3.1, h = len, $fn = loc_res);
+            translate([0, 0, -1.5]) 
+            cylinder(d2 = 3.1, d1= 6.0, h = 1.5, $fn = loc_res);
+            translate([0, 0, -(len+1.5)]) 
+            cylinder(d = 6.0, h = len, $fn = loc_res);
+        }
     }
 }
 
