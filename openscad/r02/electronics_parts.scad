@@ -137,5 +137,47 @@ module pcbBluePill_header_holes(loc_res = 32) {
     }
 }
 
+module pcbAS5600_mount_holes_cut(cut_dia = 3.3, cut_len = 10, loc_res = 32) {
+    a = (17)/2;
+    translate([+a, +a, 0])
+    cylinder(d = cut_dia, h = cut_len, $fn = loc_res);
+    translate([+a, -a, 0])
+    cylinder(d = cut_dia, h = cut_len, $fn = loc_res);
+    translate([-a, +a, 0])
+    cylinder(d = cut_dia, h = cut_len, $fn = loc_res);
+    translate([-a, -a, 0])
+    cylinder(d = cut_dia, h = cut_len, $fn = loc_res);
+}
+
+module pcbAS5600_pcb(pcb_th = 1.5, loc_res = 32) {
+    a = 23/2;
+    hull() {
+        translate([+a, +a, 0])
+        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+        translate([+a, -a, 0])
+        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+        translate([-a, +a, 0])
+        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+        translate([-a, -a, 0])
+        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+    }
+}
+
+module pcbAS5600(loc_res = 32) {
+    difference() {
+        union() {
+            color("White")
+            translate([0, 0, 0])
+            pcbAS5600_pcb();
+            // SOIC-8 4*5 mm
+            color("Gray")
+            translate([-2, -2.5, 1.5])
+            cube([4, 5, 1]);
+        }
+        translate([0, 0, -1])
+        pcbAS5600_mount_holes_cut();
+    }
+}
+
 //pcbMPU9250();
 //pcbBluePill();

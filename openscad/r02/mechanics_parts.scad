@@ -94,7 +94,7 @@ module bldc5010_motor(show = 1, loc_res = 32) {
                 translate([0,0, 17])
                 cylinder(d1 = 50, d2 = 18, h = 2, $fn = loc_res);
             }
-            translate([0, 0, 18]) 
+            translate([0, 0, 20]) 
             bldc5010_m3cut_rotor();
             translate([0, 0, -2])
             bldc5010_m3cut_stator();

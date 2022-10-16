@@ -35,6 +35,103 @@ module lego_wheel_holder_v1_1(show = 1, loc_res = 32) {
     }
 }
 
+module magnet_holder_5mm_v1_0(loc_res = 32) {
+    difference() {
+        translate([0, 0, 0])
+        cylinder(d = 9, h = 4, $fn = loc_res);
+
+        translate([0, 0, -1])
+        cylinder(d = 6, h = 4, $fn = loc_res);
+
+        // axis, 4 mm
+        translate([0, 0, -1])
+        cylinder(d = 4.2, h = 10, $fn = loc_res);
+    }
+}
+
+module motor_holder_v1_0(show = 1, loc_res = 32) {
+    as5600_angle = 45;
+    if(show) {
+        translate([0, 0, 0])
+        rotate([0, 0, 45])
+        bldc5010_motor(0);
+
+        *translate([0, 0, -10])
+        rotate([0, 0, as5600_angle])
+        pcbAS5600();
+
+        translate([0, 0, -4])
+        magnet_holder_5mm_v1_0();
+    }
+    difference() {
+        union() {
+            translate([0, 0, 3])
+            cylinder(d = 50, h = 3, $fn = loc_res);
+            hull() {
+                translate([0, 0, 3])
+                cylinder(d = 50, h = 1, $fn = loc_res);
+                translate([0, 0, -5])
+                rotate([0, 0, as5600_angle])
+                pcbAS5600_pcb(pcb_th = 1, loc_res = loc_res);
+            }
+            translate([0, 0, -7])
+            rotate([0, 0, as5600_angle])
+            pcbAS5600_mount_holes_cut(6, 6, loc_res);
+
+            // connection rods
+            translate([10, +12, 1])
+            rotate([0, 90, 0])
+            cylinder(d = 8-1.5, h = 30, $fn = loc_res);
+            translate([10, -12, 1])
+            rotate([0, 90, 0])
+            cylinder(d = 8-1.5, h = 30, $fn = loc_res);
+        }
+        translate([0, 0, -3])
+        rotate([0, 0, 45])
+        bldc5010_m3cut_stator(0);
+
+        // magnetic encoder
+        translate([0, 0, -10])
+        rotate([0, 0, as5600_angle])
+        pcbAS5600_mount_holes_cut(cut_dia = 2.5);
+        // magnet hole
+        translate([0, 0, -10])
+        cylinder(d = 10, h = 20, $fn = loc_res);
+
+        // motor base plate
+        translate([0, 0, 0])
+        cylinder(d = 32, h = 10, $fn = loc_res);
+
+        // motor cable channel
+        hull() {
+            translate([0, +3, 3])
+            rotate([0, 90, 0])
+            cylinder(d = 6, h = 30, $fn = loc_res);
+            translate([0, -3, 3])
+            rotate([0, 90, 0])
+            cylinder(d = 6, h = 30, $fn = loc_res);
+            translate([0, +3, 6])
+            rotate([0, 90, 0])
+            cylinder(d = 6, h = 30, $fn = loc_res);
+            translate([0, -3, 6])
+            rotate([0, 90, 0])
+            cylinder(d = 6, h = 30, $fn = loc_res);
+        }
+        // m3 holes for connection rods
+        translate([28, +12, -4])
+        cylinder(d = 3, h = 10, $fn = loc_res);
+        translate([36, +12, -4])
+        cylinder(d = 3, h = 10, $fn = loc_res);
+        translate([28, -12, -4])
+        cylinder(d = 3, h = 10, $fn = loc_res);
+        translate([36, -12, -4])
+        cylinder(d = 3, h = 10, $fn = loc_res);
+
+        // look inside
+        //translate([0, 0, -20]) cube(40);
+    }
+}
+
 module bldc5010_test_arm_v1_0(show = 1, loc_res = 32) {
     if(show) {
         translate([0, 0, -19])
@@ -116,6 +213,8 @@ module bldc5010_test_stand_put_together() {
 //bldc5010_test_stand_put_together();
 // printing
 //bldc5010_test_arm_v1_0(0); // 1x
-bldc5010_test_stand_v1_0(); // 1x
+//bldc5010_test_stand_v1_0(); // 1x
 //lego_wheel_holder_v1_1(0);  // 2x
 
+//motor_holder_v1_0(0, 64); // 2x
+magnet_holder_5mm_v1_0(64); // 2x
