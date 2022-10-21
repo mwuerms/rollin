@@ -137,9 +137,9 @@ module pcbBluePill_header_holes(loc_res = 32) {
     }
 }
 
-module pcbAS5600_mount_holes_cut(cut_dia = 3.3, cut_len = 10, loc_res = 32) {
-    a = (17)/2;
-    translate([+a, +a, 0])
+module pcbAS5600_mount_holes_cut(cut_dia = 3.5, cut_len = 10, loc_res = 32) {
+    a = (19.7+12.4)/2/2;
+    translate([+a,+a, 0])
     cylinder(d = cut_dia, h = cut_len, $fn = loc_res);
     translate([+a, -a, 0])
     cylinder(d = cut_dia, h = cut_len, $fn = loc_res);

@@ -38,22 +38,24 @@ module lego_wheel_holder_v1_1(show = 1, loc_res = 32) {
 module magnet_holder_5mm_v1_0(loc_res = 32) {
     difference() {
         translate([0, 0, 0])
-        cylinder(d = 9, h = 4, $fn = loc_res);
-
-        translate([0, 0, -1])
         cylinder(d = 6, h = 4, $fn = loc_res);
+
+        // magnet dia 4 x 2mm 
+        translate([0, 0, -1])
+        cylinder(d = 4.1, h = 4, $fn = loc_res);
 
         // axis, 4 mm
         translate([0, 0, -1])
-        cylinder(d = 4.2, h = 10, $fn = loc_res);
+        cylinder(d = 4.1, h = 10, $fn = loc_res);
     }
 }
 
-module motor_holder_v1_0(show = 1, loc_res = 32) {
+module motor_holder_v1_1(show = 1, loc_res = 32) {
+    bldc_angle = -45;
     as5600_angle = 45;
     if(show) {
         translate([0, 0, 0])
-        rotate([0, 0, 45])
+        rotate([0, 0, bldc_angle])
         bldc5010_motor(0);
 
         *translate([0, 0, -10])
@@ -81,13 +83,13 @@ module motor_holder_v1_0(show = 1, loc_res = 32) {
             // connection rods
             translate([10, +12, 1])
             rotate([0, 90, 0])
-            cylinder(d = 8-1.5, h = 30, $fn = loc_res);
+            cylinder(d = 8-1.2, h = 30, $fn = loc_res);
             translate([10, -12, 1])
             rotate([0, 90, 0])
-            cylinder(d = 8-1.5, h = 30, $fn = loc_res);
+            cylinder(d = 8-1.2, h = 30, $fn = loc_res);
         }
         translate([0, 0, -3])
-        rotate([0, 0, 45])
+        rotate([0, 0, bldc_angle])
         bldc5010_m3cut_stator(0);
 
         // magnetic encoder
@@ -127,8 +129,105 @@ module motor_holder_v1_0(show = 1, loc_res = 32) {
         translate([36, -12, -4])
         cylinder(d = 3, h = 10, $fn = loc_res);
 
-        // look inside
-        //translate([0, 0, -20]) cube(40);
+        // look inside translate([0, 0, -20]) cube(40);
+    }
+}
+
+module motor_holder_stand_v1_0(loc_res = 32) {
+    difference() {
+        union() {
+            hull() {
+                translate([0, +12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 16, h = 3, $fn = loc_res);
+
+                translate([0, +20, 45])
+                rotate([0, 90, 0])
+                cylinder(d = 8, h = 3, $fn = loc_res);
+            }
+            hull() {
+                translate([0, -12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 16, h = 3, $fn = loc_res);
+
+                translate([0, -20, 45])
+                rotate([0, 90, 0])
+                cylinder(d = 8, h = 3, $fn = loc_res);
+            }
+            hull() {
+                translate([0, +12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 16, h = 3, $fn = loc_res);
+
+                translate([0, +20, -15])
+                rotate([0, 90, 0])
+                cylinder(d = 8, h = 3, $fn = loc_res);
+            }
+            hull() {
+                translate([0, -12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 16, h = 3, $fn = loc_res);
+
+                translate([0, -20, -15])
+                rotate([0, 90, 0])
+                cylinder(d = 8, h = 3, $fn = loc_res);
+            }
+            hull() {
+                translate([0, +12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 16, h = 3, $fn = loc_res);
+
+                translate([0, -12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 8, h = 3, $fn = loc_res);
+            }
+
+            hull() {
+                translate([0, +12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 8, h = 3, $fn = loc_res);
+
+                translate([0, -12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 16, h = 3, $fn = loc_res);
+            }
+
+            hull() {
+                translate([0, +12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 16, h = 3, $fn = loc_res);
+
+                translate([4, +12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 8, h = 4, $fn = loc_res);
+            }
+            hull() {
+                translate([0, -12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 16, h = 3, $fn = loc_res);
+
+                translate([4, -12, 1])
+                rotate([0, 90, 0])
+                cylinder(d = 8, h = 4, $fn = loc_res);
+            }
+            
+            // connection rods
+            translate([0, +12, 1])
+            rotate([0, 90, 0])
+            cylinder(d = 8-1.2, h = 30, $fn = loc_res);
+            translate([0, -12, 1])
+            rotate([0, 90, 0])
+            cylinder(d = 8-1.2, h = 30, $fn = loc_res);
+        }
+        // m3 holes for connection rods
+        translate([18, +12, -4])
+        cylinder(d = 3, h = 10, $fn = loc_res);
+        translate([26, +12, -4])
+        cylinder(d = 3, h = 10, $fn = loc_res);
+        translate([18, -12, -4])
+        cylinder(d = 3, h = 10, $fn = loc_res);
+        translate([26, -12, -4])
+        cylinder(d = 3, h = 10, $fn = loc_res);
     }
 }
 
@@ -210,11 +309,35 @@ module bldc5010_test_stand_put_together() {
     bldc5010_test_stand_v1_0(0);
 }
 
+module connection_rod_template_v1_0(loc_res = 32) {
+    difference() {
+        union() {
+            translate([0, -6, -6])
+            cube([24, 12, 12]);
+        }
+        translate([-1, 0, 0])
+        rotate([0, 90, 0])
+        cylinder(d = 8.2, h = 35, $fn = loc_res);
+    
+        // m3 holes for connection rods
+        translate([8, 0, -15])
+        cylinder(d = 3, h = 30, $fn = loc_res);
+        translate([16, 0, -15])
+        cylinder(d = 3, h = 30, $fn = loc_res);
+    }
+}
+
 //bldc5010_test_stand_put_together();
 // printing
 //bldc5010_test_arm_v1_0(0); // 1x
 //bldc5010_test_stand_v1_0(); // 1x
 //lego_wheel_holder_v1_1(0);  // 2x
 
-//motor_holder_v1_0(0, 64); // 2x
-magnet_holder_5mm_v1_0(64); // 2x
+//motor_holder_v1_1(0, 64); // 2x
+//magnet_holder_5mm_v1_0(64); // 2x
+
+/*translate([100, 0, 0])
+rotate([0, 0, 180])
+motor_holder_v1_1();
+motor_holder_stand_v1_0(64); // 1x*/
+connection_rod_template_v1_0(64); // 1 .. 2 x

@@ -104,6 +104,21 @@ module bldc5010_motor(show = 1, loc_res = 32) {
         translate([0,0, -1.5])
         cylinder(d = 4, h = 24, $fn = loc_res);
     }
+    translate([0, 0, 3])
+    rotate([0, 0, 45]) {
+        color("Red")
+        translate([4, -2.5, 0])
+        rotate([0, 90, 0])
+        cylinder(d = 2.5, h=20, $fn = loc_res);
+        color("Black")
+        translate([4, 0, 0])
+        rotate([0, 90, 0])
+        cylinder(d = 2.5, h=20, $fn = loc_res);
+        color("Yellow")
+        translate([4, +2.5, 0])
+        rotate([0, 90, 0])
+        cylinder(d = 2.5, h=20, $fn = loc_res);
+    }
 }
 
 module flycat2204_rotor_cut(loc_res = 32) {
