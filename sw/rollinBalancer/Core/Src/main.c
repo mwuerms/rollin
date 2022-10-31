@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "mpu9250.h"
+#include "as5600.h"
 #include "string_buffer.h"
 
 /* USER CODE END Includes */
@@ -137,10 +138,11 @@ int main(void)
   MX_TIM2_Init();
   MX_USB_DEVICE_Init();
   MX_SPI1_Init();
-  MX_I2C1_Init();
+  //MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   mpu9250_init();
+  as5600_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
