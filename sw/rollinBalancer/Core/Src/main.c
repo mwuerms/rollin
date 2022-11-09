@@ -63,8 +63,8 @@ static void MX_I2C1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void _wait_some_time(void) {
-	asm("NOP");
 	for(uint32_t cnt = 50000; cnt; cnt--) {
+		asm("NOP");
 	}
 }
 
@@ -90,12 +90,16 @@ void read_mpu9250_values(void) {
 
 static void read_mpu9250_string(void) {
 	read_mpu9250_values();
+	uint16_t ang = as5600_read_angle();
 
+	string_buffer_new();
 	string_buffer_append_float(acc_xy_angle_deg, 3);
 	string_buffer_append_separator();
 	string_buffer_append_float(gyr_z_angle_deg, 3);
 	string_buffer_append_separator();
 	string_buffer_append_float(angle_deg, 3);
+	string_buffer_append_separator();
+	string_buffer_append_int16((int16_t)ang);
 	string_buffer_append_separator();
 	string_buffer_append_int16(0);
 	string_buffer_append_char('\n');
@@ -143,6 +147,7 @@ int main(void)
 
   mpu9250_init();
   as5600_init();
+  as5600_set_config();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -150,7 +155,6 @@ int main(void)
   while (1)
   {
 	  read_mpu9250_string();
-
 
 	  _wait_some_time();
     /* USER CODE END WHILE */
@@ -253,7 +257,12 @@ static void MX_I2C1_Init(void)
   LL_I2C_Init(I2C1, &I2C_InitStruct);
   LL_I2C_SetOwnAddress2(I2C1, 0);
   /* USER CODE BEGIN I2C1_Init 2 */
-
+#if 0
+  LL_I2C_GenerateStartCondition(I2C1);
+  static volatile uint32_t i;
+  for(i = 0; i < 10000; i++);
+  LL_I2C_GenerateStopCondition(I2C1);
+#endif
   /* USER CODE END I2C1_Init 2 */
 
 }
