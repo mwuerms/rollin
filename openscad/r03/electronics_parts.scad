@@ -112,6 +112,20 @@ module pcbAS5600_pcb(pcb_th = 1.5, loc_res = 32) {
     }
 }
 
+module pcbAS5600_pcb_cut(pcb_th = 2, loc_res = 32) {
+    a = (23+1)/2;
+    hull() {
+        translate([+a, +a, 0])
+        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+        translate([+a, -a, 0])
+        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+        translate([-a, +a, 0])
+        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+        translate([-a, -a, 0])
+        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+    }
+}
+
 module pcbAS5600(loc_res = 32) {
     difference() {
         union() {
