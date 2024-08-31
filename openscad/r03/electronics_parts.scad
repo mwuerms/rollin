@@ -100,29 +100,31 @@ module pcbAS5600_mount_holes_cut(cut_dia = 3.5, cut_len = 10, loc_res = 32) {
 
 module pcbAS5600_pcb(pcb_th = 1.5, loc_res = 32) {
     a = 23/2;
+    r1 = 3;
     hull() {
-        translate([+a, +a, 0])
-        cylinder(r = 3, h = pcb_th, $fn = loc_res);
-        translate([+a, -a, 0])
-        cylinder(r = 3, h = pcb_th, $fn = loc_res);
-        translate([-a, +a, 0])
-        cylinder(r = 3, h = pcb_th, $fn = loc_res);
-        translate([-a, -a, 0])
-        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+        translate([+(a-r1), +(a-r1), 0])
+        cylinder(r = r1, h = pcb_th, $fn = loc_res);
+        translate([+(a-r1), -(a-r1), 0])
+        cylinder(r = r1, h = pcb_th, $fn = loc_res);
+        translate([-(a-r1), +(a-r1), 0])
+        cylinder(r = r1, h = pcb_th, $fn = loc_res);
+        translate([-(a-r1), -(a-r1), 0])
+        cylinder(r = r1, h = pcb_th, $fn = loc_res);
     }
 }
 
 module pcbAS5600_pcb_cut(pcb_th = 2, loc_res = 32) {
     a = (23+1)/2;
+    r1 = 3;
     hull() {
-        translate([+a, +a, 0])
-        cylinder(r = 3, h = pcb_th, $fn = loc_res);
-        translate([+a, -a, 0])
-        cylinder(r = 3, h = pcb_th, $fn = loc_res);
-        translate([-a, +a, 0])
-        cylinder(r = 3, h = pcb_th, $fn = loc_res);
-        translate([-a, -a, 0])
-        cylinder(r = 3, h = pcb_th, $fn = loc_res);
+        translate([+(a-r1), +(a-r1), 0])
+        cylinder(r = r1, h = pcb_th, $fn = loc_res);
+        translate([+(a-r1), -(a-r1), 0])
+        cylinder(r = r1, h = pcb_th, $fn = loc_res);
+        translate([-(a-r1), +(a-r1), 0])
+        cylinder(r = r1, h = pcb_th, $fn = loc_res);
+        translate([-(a-r1), -(a-r1), 0])
+        cylinder(r = r1, h = pcb_th, $fn = loc_res);
     }
 }
 

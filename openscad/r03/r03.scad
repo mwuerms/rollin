@@ -55,16 +55,16 @@ module magnet_holder_5mm_v1_0(loc_res = 32) {
 
 
 // - new parts for r03 ----------------
-module r03_motor_holder_1a(col = "LightBlue", th_1 = 6, bldc_angle = -45, as5600_angle = 0, loc_res = 32) {
+module r03_motor_holder_1b(col = "LightBlue", th_1 = 6+6, bldc_angle = -45, as5600_angle = 0, loc_res = 32) {
 
     color(col)
     difference() {
         union() {
             // main body
-            translate([0, 0, 0])
+            translate([0, 0, -6])
             cylinder(d = 50, h = th_1, $fn = loc_res);
             
-            translate([0, -50/2, 0])
+            translate([0, -50/2, -6])
             cube([32, 50, th_1]);
         }
         // cuts
@@ -73,96 +73,123 @@ module r03_motor_holder_1a(col = "LightBlue", th_1 = 6, bldc_angle = -45, as5600
         cylinder(d = 25.5, h = th_1+2, $fn = loc_res);
         // cable canal
         hull() {
-            translate([0, +3, 0])
+            translate([10, +4, 1])
             rotate([0, 90, 0])
-            cylinder(d = 3, h = 200, $fn = loc_res);
-            translate([0, -3, 0])
+            cylinder(d = 4, h = 40, $fn = loc_res);
+            translate([10, -4, 1])
             rotate([0, 90, 0])
-            cylinder(d = 3, h = 200, $fn = loc_res);
-            translate([0, +3, 1.5])
+            cylinder(d = 4, h = 40, $fn = loc_res);
+            translate([10, +4, 2])
             rotate([0, 90, 0])
-            cylinder(d = 3, h = 200, $fn = loc_res);
-            translate([0, -3, 1.5])
+            cylinder(d = 4, h = 40, $fn = loc_res);
+            translate([10, -4, 2])
             rotate([0, 90, 0])
-            cylinder(d = 3, h = 200, $fn = loc_res);
+            cylinder(d = 4, h = 40, $fn = loc_res);
         }
         hull() {
-            translate([0, +3, 1.5])
+            translate([10, +4, 2])
             rotate([0, 90, 0])
-            cylinder(d = 3, h = 25, $fn = loc_res);
-            translate([0, -3, 1.5])
+            cylinder(d = 4, h = 12, $fn = loc_res);
+            translate([10, -4, 2])
             rotate([0, 90, 0])
-            cylinder(d = 3, h = 25, $fn = loc_res);
-            translate([0, +3, th_1])
+            cylinder(d = 4, h = 12, $fn = loc_res);
+            translate([10, +4, th_1])
             rotate([0, 90, 0])
-            cylinder(d = 3, h = 16, $fn = loc_res);
-            translate([0, -3, th_1])
+            cylinder(d = 4, h = 1, $fn = loc_res);
+            translate([10, -4, th_1])
             rotate([0, 90, 0])
-            cylinder(d = 3, h = 16, $fn = loc_res);
+            cylinder(d = 4, h = 1, $fn = loc_res);
         }
+        // cuts
+        // motor shaft and magnet holder
+        translate([0, 0, -7])
+        cylinder(d = 10, h = th_1+2, $fn = loc_res);
+        
+        // m3 screws to hold the motor
+        translate([0, 0, -4])
+        rotate([0, 0, bldc_angle])
+        bldc5010_m3cut_stator(loc_res = loc_res);
+        // space for the magnetig sensor, cut m3 thread into 2.5 mm holes
+        translate([0, 0, -10])
+        rotate([0, 0, as5600_angle])
+        pcbAS5600_mount_holes_cut(cut_dia = 2.5, cut_len = 20, loc_res = loc_res);
         
         // cut m3 nuts and bolts
         translate([27, 9, 6-2])
         rotate([180, 0, 0])
         m3_cut(loc_res = loc_res);
         
-        translate([27, 18, 6-2])
+        translate([27, 20, 6-2])
         m3_nut_bolt_cut();
         
         translate([27, -9, 6-2])
         m3_nut_bolt_cut();
             
-        translate([27, -18, 6-2])
+        translate([27, -20, 6-2])
         rotate([180, 0, 0])
         m3_cut(loc_res = loc_res);
         
         // cut bottom cap
-        translate([-50/2, -50/2, -1])
+        translate([-50/2, -50/2, -7])
         cube([10, 50, th_1+2]);
         // m3 bolts to hold bottom cap
         translate([-12, +15, 0])
-        rotate([0, 90, 0])
-        m3_nut_and_bolt_cut(m3_bolt_and_nut_distance = 4, m3_bolt_len = 20, loc_res = loc_res);
+        rotate([0, 90, 0]) {
+            m3_nut_and_bolt_cut(m3_bolt_and_nut_distance = 4, m3_bolt_len = 50, loc_res = loc_res);
+            hull() {
+                translate([0, 0, 0])
+                m3_nut_cut();
+                translate([10, 0, 0])
+                m3_nut_cut();
+            }
+        }
+        translate([26, +15, 0])
+        rotate([0, 90, 0]) {
+            hull() {
+                translate([0, 0, 0])
+                m3_nut_cut();
+                translate([10, 0, 0])
+                m3_nut_cut();
+            }
+        }
         translate([-12, -15, 0])
-        rotate([0, 90, 0])
-        m3_nut_and_bolt_cut(m3_bolt_and_nut_distance = 4, m3_bolt_len = 20, loc_res = loc_res);
+        rotate([0, 90, 0]) {
+            m3_nut_and_bolt_cut(m3_bolt_and_nut_distance = 4, m3_bolt_len = 50, loc_res = loc_res);
+            hull() {
+                translate([0, 0, 0])
+                m3_nut_cut();
+                translate([10, 0, 0])
+                m3_nut_cut();
+            }
+        }
+        translate([26, -15, 0])
+        rotate([0, 90, 0]) {
+            hull() {
+                translate([0, 0, 0])
+                m3_nut_cut();
+                translate([10, 0, 0])
+                m3_nut_cut();
+            }
+        }
         
         // look inside 
-        *translate([0, 0, -20]) cube(40);
+        *translate([-20, 0, -20]) cube(80);
     }
 }
 
-module r03_motor_holder_2a(col = "LightGreen", th_2 = 6+4, bldc_angle = -45, as5600_angle = 0, loc_res = 32) {
+module r03_motor_holder_2b(col = "LightGreen", th_2 = 2*4, bldc_angle = -45, as5600_angle = 0, loc_res = 32) {
 
     color(col)
     difference() {
         union() {
             // main body
-            translate([0, 0, 0])
+            translate([0, 0, -0])
             cylinder(d = 50, h = th_2, $fn = loc_res);
             
-            translate([0, -50/2, 0])
+            translate([0, -50/2, -0])
             cube([32, 50, th_2]);
         }
-        // cuts
-        // motor shaft and magnet holder
-        translate([0, 0, -1])
-        cylinder(d = 10, h = th_2+2, $fn = loc_res);
-        
-        // m3 screws to hold the motor
-        translate([0, 0, 6])
-        rotate([0, 0, bldc_angle])
-        bldc5010_m3cut_stator(loc_res = loc_res);
-        
-        // space for the magnetig sensor
-        translate([0, 0, -2])
-        pcbAS5600_pcb_cut(pcb_th = 6, loc_res = loc_res);
-        // space for cables
-        translate([-50/2, +(23-1)/2, -2])
-        cube([50+30, 4, 4+2]);
-        translate([-50/2, -(23-1)/2-4, -2])
-        cube([50+30, 4, 4+2]);
-        
+        // cut
         // cut m3 bolts to hold _1 and _2 together
         translate([27, 9, -1])
         m3_bolt_cut(m3_bolt_len = (th_2+2), loc_res = loc_res);
@@ -176,26 +203,34 @@ module r03_motor_holder_2a(col = "LightGreen", th_2 = 6+4, bldc_angle = -45, as5
         translate([27, -18, -1])
         m3_bolt_cut(m3_bolt_len = (th_2+2), loc_res = loc_res);
         
+        // m3 holes to top layer
+        translate([23, 14, th_2/2])
+        rotate([0, 90, 0])
+        cylinder(d = 3.2, h = 10, $fn = loc_res);
+        translate([23, -14, th_2/2])
+        rotate([0, 90, 0])
+        cylinder(d = 3.2, h = 10, $fn = loc_res);
+        
+        // cut walls
+        translate([0, 0, -1])
+        cylinder(d = 46, h = th_2+2, $fn = loc_res);
+        translate([0, -(50/2-2), -1])
+        cube([24, 46, th_2+2]);
+        translate([0, -10/2, -1])
+        cube([34, 10, th_2+2]);
         // cut bottom cap
         translate([-50/2, -50/2, -1])
         cube([10, 50, th_2+2]);
-        // m3 bolts to hold bottom cap
-        translate([-12, +15, th_2])
-        rotate([0, 90, 0])
-        m3_nut_and_bolt_cut(m3_bolt_and_nut_distance = 4, m3_bolt_len = 20, loc_res = loc_res);
-        translate([-12, -15, th_2])
-        rotate([0, 90, 0])
-        m3_nut_and_bolt_cut(m3_bolt_and_nut_distance = 4, m3_bolt_len = 20, loc_res = loc_res);
-        
         // look inside 
-        *translate([0, 0, -20]) cube(40);
+        *translate([0, 0, -20]) cube(80);
     }
 }
 
-module r03_motor_holder_3a(col = "CadetBlue", th_1 = 6, th_2 = 6+4, loc_res = 32) {
+
+module r03_motor_holder_3b(col = "CadetBlue", th_1 = 6, th_2 = 6+4, loc_res = 32) {
     th_12 = th_1+th_2;
     color(col)
-    //translate([50/2-10, 0, 0])
+    translate([50/2-10, 0, 0])
     difference() {
         union() {
             // main body
@@ -221,28 +256,12 @@ module r03_motor_holder_3a(col = "CadetBlue", th_1 = 6, th_2 = 6+4, loc_res = 32
         m3_nut_and_bolt_cut(m3_bolt_and_nut_distance = 4, m3_bolt_len = 20, loc_res = loc_res);
         
         // sensor cut away
-        difference() {
-            translate([0, 0, 2])
-            cylinder(d = 50-4, h = 2*(th_12-2), $fn = loc_res);
-            // cut stands
-            translate([-20, +15, th_12+th_2])
-            rotate([0, 90, 0])
-            cylinder(d = 8, h = 10, $fn = loc_res);
-            translate([-20, +15, th_12-th_2])
-            rotate([0, 90, 0])
-            cylinder(d = 8, h = 10, $fn = loc_res);
-            translate([-20, -15, th_12+th_2])
-            rotate([0, 90, 0])
-            cylinder(d = 8, h = 10, $fn = loc_res);
-            translate([-20, -15, th_12-th_2])
-            rotate([0, 90, 0])
-            cylinder(d = 8, h = 10, $fn = loc_res);
-        }
+        translate([-19, -23/2, 2])
+        cube([7, 23, 28]);
     }
 }
 
-module r03_motor_holder_1_2_3_v1_0_puttogether(bldc_angle = -45, as5600_angle = 0, loc_res = 32) {
-    
+module r03_motor_holder_1_2_3_v1_0_puttogether(bldc_angle = -45, as5600_angle = 45, loc_res = 32) {
     // components
     *translate([0, 0, 0])
     rotate([0, 0, bldc_angle])
@@ -257,32 +276,51 @@ module r03_motor_holder_1_2_3_v1_0_puttogether(bldc_angle = -45, as5600_angle = 
     magnet_holder_5mm_v1_0();
     
     translate([0, 0, 0])
-    r03_motor_holder_1a(bldc_angle = bldc_angle, as5600_angle = as5600_angle,loc_res = loc_res);
+    r03_motor_holder_1b(bldc_angle = bldc_angle, as5600_angle = as5600_angle,loc_res = loc_res);
     
-    translate([0, 0, -(6+4)])
-    r03_motor_holder_2a(bldc_angle = bldc_angle, as5600_angle = as5600_angle,loc_res = loc_res);
+    translate([0, 0, -8-6])
+    r03_motor_holder_2b(bldc_angle = bldc_angle, as5600_angle = as5600_angle,loc_res = loc_res);
     
-    translate([-(50/2-10), 0, -(6+4)-(6+6+4)])
-    r03_motor_holder_3a();
+    *translate([-(50/2-10), 0, -(6+4)-(6+6+4)])
+    r03_motor_holder_3b();
 }
 *r03_motor_holder_1_2_3_v1_0_puttogether();
 
-module r03_motor_holder_put_together(loc_res = 32) {
-    translate([0, 0, (6+4)])
-    r03_motor_holder_1_2_3_v1_0_puttogether(loc_res = loc_res);
+module r03_motor_holder_put_together(bldc_angle = -45, as5600_angle = 45, loc_res = 32) {
+    // components
+    *translate([0, 0, 0])
+    rotate([0, 0, bldc_angle])
+    bldc5010_motor(0);
 
-    translate([0, 0, -(6+4)])
+    *translate([0, 0, -7.6])
+    rotate([0, 0, as5600_angle])
+    pcbAS5600();
+
+    *color("Red")
+    translate([0, 0, -4])
+    magnet_holder_5mm_v1_0();
+    
+    translate([0, 0, 0])
+    r03_motor_holder_1b(bldc_angle = bldc_angle, as5600_angle = as5600_angle,loc_res = loc_res);
+    
+    translate([0, 0, -8-6])
+    r03_motor_holder_2b(bldc_angle = bldc_angle, as5600_angle = as5600_angle,loc_res = loc_res);
+    
+    translate([0, 0, -8-6-6])
     rotate([180, 0, 0])
-    r03_motor_holder_1_2_3_v1_0_puttogether(loc_res = loc_res);
+    r03_motor_holder_1b(bldc_angle = bldc_angle, as5600_angle = as5600_angle,loc_res = loc_res);
+    
+    translate([-(50/2-10), 0, -(6+4)-(6+6+4)])
+    r03_motor_holder_3b();
 }
-*r03_motor_holder_put_together(64);
+*r03_motor_holder_put_together(loc_res = 64);
 
-r03_motor_holder_3a();
+
 
 // - print parts ------------------------------------------
-*r03_motor_holder_1a(bldc_angle = -45, as5600_angle = 0,loc_res = 64);
-*r03_motor_holder_2a(bldc_angle = -45, as5600_angle = 0,loc_res = 64);
-
+*r03_motor_holder_1b(bldc_angle = -45, as5600_angle = 0,loc_res = 64);
+r03_motor_holder_2b(bldc_angle = -45, as5600_angle = 0,loc_res = 64);
+*r03_motor_holder_3b(loc_res = 128);
 
 
 
