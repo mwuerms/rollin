@@ -318,8 +318,8 @@ module r03_motor_holder_put_together(bldc_angle = -45, as5600_angle = 45, loc_re
 
 
 // - print parts ------------------------------------------
-*r03_motor_holder_1b(bldc_angle = -45, as5600_angle = 0,loc_res = 64);
-r03_motor_holder_2b(bldc_angle = -45, as5600_angle = 0,loc_res = 64);
+r03_motor_holder_1b(bldc_angle = -45, as5600_angle = 45,loc_res = 64);
+*r03_motor_holder_2b(bldc_angle = -45, as5600_angle = 45,loc_res = 64);
 *r03_motor_holder_3b(loc_res = 128);
 
 

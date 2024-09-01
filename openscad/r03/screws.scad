@@ -34,13 +34,13 @@ module m3_cut(len = 10, m3_thread_dia = 3.2, m3_head_dia = 6.2, loc_res = 32) {
 }
 //m3_cut();
 
-module m3_nut_cut(len = 3, m3_nut_dia = 6.6, loc_res = 32) {
+module m3_nut_cut(len = 3.6, m3_nut_dia = 6.7, loc_res = 32) {
     translate([0, 0, 0]) 
     cylinder(d = m3_nut_dia, h = len, $fn = 6);
 }
 //m3_nut_cut();
 
-module m3_nut_bolt_cut(m3_nut_len = 3, m3_bolt_len = 10, m3_thread_dia = 3.2, m3_nut_dia = 6.6, loc_res = 32) {
+module m3_nut_bolt_cut(m3_nut_len = 3.6, m3_bolt_len = 10, m3_thread_dia = 3.2, m3_nut_dia = 6.7, loc_res = 32) {
     translate([0, 0, 0]) 
     cylinder(d = m3_nut_dia, h = m3_nut_len, $fn = 6);
     translate([0, 0, -m3_bolt_len]) 
@@ -54,7 +54,7 @@ module m3_bolt_cut(m3_bolt_len = 10, m3_thread_dia = 3.2, loc_res = 32) {
 }
 //m3_bolt_cut();
 
-module m3_nut_and_bolt_cut(m3_bolt_and_nut_distance = 5, m3_nut_len = 3, m3_bolt_len = 10, m3_thread_dia = 3.2, m3_head_dia = 6.2, m3_nut_dia = 6.6, loc_res = 32) {
+module m3_nut_and_bolt_cut(m3_bolt_and_nut_distance = 5, m3_nut_len = 3.6, m3_bolt_len = 10, m3_thread_dia = 3.2, m3_head_dia = 6.2, m3_nut_dia = 6.7, loc_res = 32) {
     
     translate([0, 0, 0])
     m3_nut_cut(len = m3_nut_len, m3_nut_dia = m3_nut_dia, loc_res = loc_res);
