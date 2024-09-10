@@ -130,32 +130,54 @@ module pcbHolder(loc_res = 32, show_pcbs = 1) {
 }
 
 module stand(loc_res = 32) {
+    r1 = 30/2;
+    r2 = 55/2;
+    nb_marks = 16;
     difference() {
         union() {
             translate([0, 0, 0])
-            cylinder(d = 60, h = 2, $fn = loc_res);
-            translate([-20, -70, 0])
-            cylinder(d = 8, h = 30, $fn = loc_res);
-            translate([+20, -70, 0])
-            cylinder(d = 8, h = 30, $fn = loc_res);
+            cylinder(d = 60, h = 1, $fn = loc_res);
             hull() {
                 translate([0, 0, 0])
-                cylinder(d = 8, h = 2, $fn = loc_res);
+                cylinder(d = 8, h = 1, $fn = loc_res);
                 translate([-20, -70, 0])
-                cylinder(d = 8, h = 2, $fn = loc_res);
+                cylinder(d = 8, h = 1, $fn = loc_res);
                 translate([+20, -70, 0])
-                cylinder(d = 8, h = 2, $fn = loc_res);
+                cylinder(d = 8, h = 1, $fn = loc_res);
+            }            
+            translate([0, 0, -2])
+            hull() {
+                translate([0, 0, 0])
+                cylinder(d = 5, h = 3, $fn = loc_res);
+                translate([-20, -70, 0])
+                cylinder(d = 5, h = 3, $fn = loc_res);
+            }
+            translate([0, 0, -2])
+            hull() {
+                translate([0, 0, 0])
+                cylinder(d = 5, h = 3, $fn = loc_res);
+                translate([+20, -70, 0])
+                cylinder(d = 5, h = 3, $fn = loc_res);
             }
         }
         // center hole
-        translate([0, 0, -10])
+        #translate([0, 0, -10])
         cylinder(d = 3, h = 20, $fn = loc_res);
         
-        // hollow feets
-        translate([-20, -70, -2])
-        cylinder(d = 6, h = 30+4, $fn = loc_res);
-        translate([+20, -70, -2])
-        cylinder(d = 6, h = 30+4, $fn = loc_res);
+        // scale
+        translate([0, 0, 0.5]) // center
+        for(n = [0:1:(nb_marks-1)])
+        hull() {
+            translate([r1*cos(n*360/nb_marks), r1*sin(n*360/nb_marks), 0])
+            cylinder(d = 1, h = 2, $fn = loc_res);
+            translate([r2*cos(n*360/nb_marks), r2*sin(n*360/nb_marks), 0])
+            cylinder(d = 1, h = 2, $fn = loc_res);
+        }
+        // m3 holes
+        translate([-20, -70, -5])
+        cylinder(d = 3.2, h = 10, $fn = loc_res);
+        translate([+20, -70, -5])
+        cylinder(d = 3.2, h = 10, $fn = loc_res);
     }
 }
 
@@ -218,15 +240,43 @@ module motorAdapter2(loc_res = 32) {
     }
 }
 
+module stand_base_holder(loc_res = 32) {
+    difference() {
+        union() {
+            hull() {
+                translate([0, 0, 0])
+                cylinder(d = 8, h = 4, $fn = loc_res);
+                translate([+6, -5, 0])
+                cylinder(d = 2, h = 4, $fn = loc_res);
+                translate([-6, -5, 0])
+                cylinder(d = 2, h = 4, $fn = loc_res);
+            }
+            hull() {
+                translate([+6, -5, -1])
+                cylinder(d = 2, h = 30, $fn = loc_res);
+                translate([-6, -5, -1])
+                cylinder(d = 2, h = 30, $fn = loc_res);
+            }
+        }
+        // M3 holes
+        translate([0, 0, -1])
+        cylinder(d = 3.2, h = 13, $fn = loc_res);
+    }
+}
+
+
 // middle axis in the center
 /*translate([0, 0, -10])
 cylinder(d = 3, h = 20, $fn = 32);
 */
 
-//translate([0, 0, 0]) pcbHolder(32, 0);
+*translate([0, 0, 0]) pcbHolder(32, 0);
 
-//translate([0, 0, -6]) stand(32);
+*translate([0, 0, -6]) stand(64);
+//translate([+20, -70, -5])
+stand_base_holder(64);
+
 
 //translate([0, 0, -8]) motorAdapter1();
 
-translate([0, 0, 4]) motorAdapter2();
+//translate([0, 0, 4]) motorAdapter2();
