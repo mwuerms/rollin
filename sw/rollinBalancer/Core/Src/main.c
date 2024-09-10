@@ -146,8 +146,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   mpu9250_init();
-  as5600_init();
-  as5600_set_config();
   /* USER CODE END 2 */
 
   /* Infinite loop */
