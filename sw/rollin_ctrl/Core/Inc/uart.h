@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "../fifo/fifo.h"
+#include "fifo.h"
 
 #define BAUDRATE_9600 (0)
 #define BAUDRATE_57600 (1)

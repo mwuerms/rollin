@@ -19,8 +19,8 @@
 #define NB_ELEMENTS(x)	(sizeof(x)/sizeof(x[0]))
 //#define SPI1_NSS_Pin LL_GPIO_PIN_4
 //#define SPI1_NSS_GPIO_Port GPIOA
-#define nSS_Set()	LL_GPIO_SetOutputPin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin);
-#define nSS_Reset()	LL_GPIO_ResetOutputPin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin);
+#define nSS_Set()	LL_GPIO_SetOutputPin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin)
+#define nSS_Reset()	LL_GPIO_ResetOutputPin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin)
 
 #define RAD_TO_DEG	(180.0f/M_PI)
 
