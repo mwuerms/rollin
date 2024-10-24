@@ -50,7 +50,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uart_ctrl_t uart_ctrl;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,11 +92,25 @@ void read_mpu9250_values(void) {
 
 static void read_mpu9250_string(void) {
 	read_mpu9250_values();
+
+	// using https://github.com/qwertpas/SerpentSerialTool
 	str_buf_clear(mpu_str, MPU_STR_SIZE);
 	str_buf_append_string(mpu_str, MPU_STR_SIZE, "acc_xy_deg: ");
 	str_buf_append_float(mpu_str, MPU_STR_SIZE, acc_xy_angle_deg, 3);
-	str_buf_append_string(mpu_str, MPU_STR_SIZE, "\n\r");
-	uart_send_string(&uart_ctrl, mpu_str);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, "\n");
+	uart_send_string(mpu_str);
+
+	str_buf_clear(mpu_str, MPU_STR_SIZE);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, "gyr_z_deg: ");
+	str_buf_append_float(mpu_str, MPU_STR_SIZE, gyr_z_angle_deg, 3);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, "\n");
+	uart_send_string(mpu_str);
+
+	str_buf_clear(mpu_str, MPU_STR_SIZE);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, "angle_deg: ");
+	str_buf_append_float(mpu_str, MPU_STR_SIZE, angle_deg, 3);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, "\n\t");
+	uart_send_string(mpu_str);
 }
 /* USER CODE END 0 */
 
@@ -135,9 +149,13 @@ int main(void)
 	MX_SPI1_Init();
 	MX_TIM1_Init();
 	/* USER CODE BEGIN 2 */
-	uart_init(&uart_ctrl, BAUDRATE_9600);
+	uart_init();
 	mpu9250_init();
-	uart_send_string(&uart_ctrl, "testing 64 bytes, not so much\n\r");
+
+	str_buf_clear(mpu_str, MPU_STR_SIZE);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, "testing 64 bytes, not so much\n");
+	uart_send_string(mpu_str);
+	_wait_some_time();
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -145,7 +163,6 @@ int main(void)
 	while (1)
 	{
 		read_mpu9250_string();
-
 		_wait_some_time();
 		/* USER CODE END WHILE */
 

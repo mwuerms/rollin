@@ -35,7 +35,8 @@ typedef struct {
  * @param   baud        baudrate to set
  * @return  =true: success, =false: error
  */
-uint16_t uart_init(uart_ctrl_t *uart_ctrl, uint16_t baud);
+//uint16_t uart_init(uart_ctrl_t *uart_ctrl, uint16_t baud);
+uint16_t uart_init(void);
 
 /**
  * set tx fifo
@@ -44,8 +45,7 @@ uint16_t uart_init(uart_ctrl_t *uart_ctrl, uint16_t baud);
  * @param   tx_size     size of tx_data
  * @return  =true: success, =false: error
  */
-uint16_t uart_set_tx_fifo(uart_ctrl_t *uart_ctrl, uint8_t *tx_data, uint16_t tx_size);
-
+//uint16_t uart_set_tx_fifo(uart_ctrl_t *uart_ctrl, uint8_t *tx_data, uint16_t tx_size);
 
 /**
  * set tx fifo
@@ -54,48 +54,50 @@ uint16_t uart_set_tx_fifo(uart_ctrl_t *uart_ctrl, uint8_t *tx_data, uint16_t tx_
  * @param   rx_size     size of tx_data
  * @return  =true: success, =false: error
  */
-uint16_t uart_set_rx_fifo(uart_ctrl_t *uart_ctrl, uint8_t *rx_data, uint16_t rx_size);
+//uint16_t uart_set_rx_fifo(uart_ctrl_t *uart_ctrl, uint8_t *rx_data, uint16_t rx_size);
 
 /**
  * enable the uart by this uart_ctrl
  * @param   uart_ctrl   uart ctrl struct
  * @return  =true: success, =false: error
  */
-uint16_t uart_enable(uart_ctrl_t *uart_ctrl);
+//uint16_t uart_enable(uart_ctrl_t *uart_ctrl);
 
 /**
  * enable the uart by this uart_ctrl
  * @param   uart_ctrl   uart ctrl struct
  * @return  =true: success, =false: error
  */
-uint16_t uart_disable(uart_ctrl_t *uart_ctrl);
+//uint16_t uart_disable(uart_ctrl_t *uart_ctrl);
 
 /**
  * send data from a buffer over uart
  * @param   uart_ctrl   uart ctrl struct
  * @return  nb bytes copied from buffer to tx_fifo
  */
-uint16_t uart_send_buffer(uart_ctrl_t *uart_ctrl, uint8_t *buffer, uint16_t length);
+//uint16_t uart_send_buffer(uart_ctrl_t *uart_ctrl, uint8_t *buffer, uint16_t length);
+uint16_t uart_send_buffer(uint8_t *buffer, uint16_t length);
 
 /**
  * send a string '\0' terminated over uart, '\0' will not be sent
  * @param   uart_ctrl   uart ctrl struct
  * @return  nb bytes copied from buffer to tx_fifo
  */
-uint16_t uart_send_string(uart_ctrl_t *uart_ctrl, char *str);
+//uint16_t uart_send_string(uart_ctrl_t *uart_ctrl, char *str);
+uint16_t uart_send_string(char *str);
 
 /**
  * start receiving
  * @param   uart_ctrl   uart ctrl struct
  * @return  =true: success, =false: error
  */
-uint16_t uart_start_recieve(uart_ctrl_t *uart_ctrl);
+//uint16_t uart_start_recieve(uart_ctrl_t *uart_ctrl);
 
 /**
  * stop receiving
  * @param   uart_ctrl   uart ctrl struct
  * @return  =true: success, =false: error
  */
-uint16_t uart_stop_recieve(uart_ctrl_t *uart_ctrl);
+//uint16_t uart_stop_recieve(uart_ctrl_t *uart_ctrl);
 
 #endif // _MM_UART_H_
