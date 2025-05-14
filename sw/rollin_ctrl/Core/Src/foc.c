@@ -14,9 +14,9 @@
 // - includes ------------------------------------------------------------------
 #include "foc.h"
 #include "math.h"
+#include "main.h"
 
 // - defines -------------------------------------------------------------------
-#define FOC_NB_BLDC_MOTORS (2)
 #define FOC_BLDC_MOTOR1_TIMER (TIM1)
 #define FOC_BLDC_MOTOR2_TIMER (TIM2)
 // specify the bldc motors
@@ -26,22 +26,23 @@
 #define FOC_BLDC_MOTOR_NB_MAGNETS (14)
 
 // timer resolution 16 bits
-#define FOC_PWM_MAX (65535UL)
-#define FOC_SIN_LUT_NB_VALUES (32UL)
+#define FOC_PWM_TIMER_FREQ (8000000UL)
+//#define FOC_PWM_MAX (65535UL)
+#define FOC_PWM_MAX (799UL)
+#define FOC_SIN_LUT_NB_VALUES (12UL)
 #define FOC_SIN_LUT_SIZE (FOC_BLDC_MOTOR_NB_COILS*FOC_SIN_LUT_NB_VALUES)
 #define FOC_SIN_LUT_MAX_INDEX (FOC_SIN_LUT_SIZE - 1)
 #define FOC_SIN_LUT_U_START (0 * FOC_SIN_LUT_NB_VALUES)
 #define FOC_SIN_LUT_V_START (1 * FOC_SIN_LUT_NB_VALUES)
 #define FOC_SIN_LUT_W_START (2 * FOC_SIN_LUT_NB_VALUES)
-#define FOC_SIN_AMPLITUDE (32000) // this determines the current through the coils
 #define FOC_SIN_OFFSET ((FOC_PWM_MAX+1)/2) // 1/2 of max
+#define FOC_SIN_AMPLITUDE (FOC_PWM_MAX/2) // this determines the current through the coils
 
 #define FOC_NB_STEPS_PER_FULL_ROTATION (FOC_SIN_LUT_SIZE * FOC_BLDC_MOTOR_NB_POLES / FOC_BLDC_MOTOR_NB_COILS)
 
 // - private variables ---------------------------------------------------------
 static uint16_t sin_lut[FOC_SIN_LUT_SIZE];
-static foc_t motor1;
-static foc_t motor2;
+static foc_t motors[FOC_NB_BLDC_MOTORS];
 
 // - private functions ---------------------------------------------------------
 // increment i+1 so it keeps between 0 ... MAX, else wrap around
@@ -69,6 +70,7 @@ uint16_t foc_init(void) {
 	uint16_t n;
 	double x, w, wstep;
 
+	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
 	// fill in sine wave lookup table
 	w = 0.0;
 	wstep = (2*M_PI)/FOC_SIN_LUT_SIZE;
@@ -79,28 +81,38 @@ uint16_t foc_init(void) {
 		sin_lut[n] = (uint16_t)x;
 	}
 	// sin lut generation tested: 2025-05-14, Martin Egli: OK
+	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
 	
 	// init motor 1
-	motor1.TIM = FOC_BLDC_MOTOR1_TIMER;
-	motor1.sin.u = FOC_SIN_LUT_U_START;
-	motor1.sin.v = FOC_SIN_LUT_V_START;
-	motor1.sin.w = FOC_SIN_LUT_W_START;
+	motors[FOC_MOTOR1].TIM = FOC_BLDC_MOTOR1_TIMER;
+	motors[FOC_MOTOR1].sin.u = FOC_SIN_LUT_U_START;
+	motors[FOC_MOTOR1].sin.v = FOC_SIN_LUT_V_START;
+	motors[FOC_MOTOR1].sin.w = FOC_SIN_LUT_W_START;
 
 	// init motor 2
-	motor2.TIM = FOC_BLDC_MOTOR2_TIMER;
-	motor2.sin.u = FOC_SIN_LUT_U_START;
-	motor2.sin.v = FOC_SIN_LUT_V_START;
-	motor2.sin.w = FOC_SIN_LUT_W_START;
+	motors[FOC_MOTOR2].TIM = FOC_BLDC_MOTOR2_TIMER;
+	motors[FOC_MOTOR2].sin.u = FOC_SIN_LUT_U_START;
+	motors[FOC_MOTOR2].sin.v = FOC_SIN_LUT_V_START;
+	motors[FOC_MOTOR2].sin.w = FOC_SIN_LUT_W_START;
 
 	return FOC_NB_BLDC_MOTORS;
 }
 
 void foc_start(void) {
-	motor1.TIM->CCR1 = sin_lut[motor1.sin.u];
-	motor1.TIM->CCR2 = sin_lut[motor1.sin.v];
-	motor1.TIM->CCR3 = sin_lut[motor1.sin.w];
-	motor1.sin.u = NEXT_INDEX_FOREWARD(motor1.sin.u);
-	motor1.sin.u = NEXT_INDEX_BACKWARD(motor1.sin.u);
+	uint32_t cnt;
+	LL_TIM_OC_SetCompareCH1(motors[FOC_MOTOR1].TIM, (uint32_t)sin_lut[motors[FOC_MOTOR1].sin.u]);
+	LL_TIM_OC_SetCompareCH2(motors[FOC_MOTOR1].TIM, (uint32_t)sin_lut[motors[FOC_MOTOR1].sin.v]);
+	LL_TIM_OC_SetCompareCH3(motors[FOC_MOTOR1].TIM, (uint32_t)sin_lut[motors[FOC_MOTOR1].sin.w]);
+	LL_TIM_EnableAllOutputs(motors[FOC_MOTOR1].TIM);
+	LL_TIM_CC_EnableChannel(motors[FOC_MOTOR1].TIM, LL_TIM_CHANNEL_CH1|LL_TIM_CHANNEL_CH2|LL_TIM_CHANNEL_CH3);
+	LL_TIM_EnableCounter(motors[FOC_MOTOR1].TIM);
+
+	LL_TIM_DisableIT_CC1(TIM3);
+	cnt = LL_TIM_GetCounter(TIM3);
+	LL_TIM_OC_SetCompareCH1(TIM3, cnt + 1000);
+	LL_TIM_ClearFlag_CC1(TIM3);
+	LL_TIM_EnableIT_CC1(TIM3);
+	LL_TIM_EnableCounter(TIM3);
 	/*
 	uint16_t tim_pwm = 0;
 		HAL_TIM_Base_Start(&htim1);
@@ -111,5 +123,22 @@ void foc_start(void) {
 
 
 void foc_ctrl_process(void) {
-	return;
+	uint32_t cnt;
+
+	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
+
+	motors[FOC_MOTOR1].sin.u = NEXT_INDEX_FOREWARD(motors[FOC_MOTOR1].sin.u);
+	motors[FOC_MOTOR1].sin.v = NEXT_INDEX_FOREWARD(motors[FOC_MOTOR1].sin.v);
+	motors[FOC_MOTOR1].sin.w = NEXT_INDEX_FOREWARD(motors[FOC_MOTOR1].sin.w);
+	LL_TIM_OC_SetCompareCH1(motors[FOC_MOTOR1].TIM, (uint32_t)sin_lut[motors[FOC_MOTOR1].sin.u]);
+	LL_TIM_OC_SetCompareCH2(motors[FOC_MOTOR1].TIM, (uint32_t)sin_lut[motors[FOC_MOTOR1].sin.v]);
+	LL_TIM_OC_SetCompareCH3(motors[FOC_MOTOR1].TIM, (uint32_t)sin_lut[motors[FOC_MOTOR1].sin.w]);
+
+	LL_TIM_DisableIT_CC1(TIM3);
+	cnt = LL_TIM_GetCounter(TIM3);
+	LL_TIM_OC_SetCompareCH1(TIM3, cnt + 1000);
+	LL_TIM_ClearFlag_CC1(TIM3);
+	LL_TIM_EnableIT_CC1(TIM3);
+
+	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
 }

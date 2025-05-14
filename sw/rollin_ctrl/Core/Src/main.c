@@ -149,6 +149,7 @@ int main(void)
   MX_ADC1_Init();
   MX_SPI1_Init();
   MX_TIM1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 	uart_init();
 	mpu9250_init();
@@ -168,7 +169,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		read_mpu9250_string();
+		//read_mpu9250_string();
 		_wait_some_time();
     /* USER CODE END WHILE */
 
