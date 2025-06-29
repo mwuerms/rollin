@@ -318,9 +318,10 @@ module r03_motor_holder_put_together(bldc_angle = -45, as5600_angle = 45, loc_re
 
 
 // - print parts ------------------------------------------
-r03_motor_holder_1b(bldc_angle = -45, as5600_angle = 45,loc_res = 64);
+*r03_motor_holder_1b(bldc_angle = -45, as5600_angle = 45,loc_res = 64);
 *r03_motor_holder_2b(bldc_angle = -45, as5600_angle = 45,loc_res = 64);
 *r03_motor_holder_3b(loc_res = 128);
+lego_wheel_holder_v1_1(show = 0, loc_res = 128);
 
 
 
@@ -591,4 +592,3 @@ module bldc5010_test_stand_v1_0(loc_res = 32) {
         cylinder(d = 3.1, h = 20, $fn = 32);
     }
 }
-
