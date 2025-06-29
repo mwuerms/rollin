@@ -62,6 +62,8 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+volatile uint32_t global_event = 0;
+
 #define MPU_STR_SIZE (128)
 static char mpu_str[MPU_STR_SIZE];
 
@@ -87,13 +89,23 @@ void read_mpu9250_values(void) {
 	gyr_z_angle_deg = gyr_z_angle_deg_rate * 0.01201;//0.01192; //meas_time in s
 
 	// complementary filter for angle from accelerometer and gyroscope
-	angle_deg = 0.95 * (angle_deg_prev + gyr_z_angle_deg) + 0.05 * acc_xy_angle_deg;
+	angle_deg = 0.80f * (angle_deg_prev + gyr_z_angle_deg) + 0.20f * acc_xy_angle_deg;
 	angle_deg_prev = angle_deg;
 }
 
 static void read_mpu9250_string(void) {
 	read_mpu9250_values();
 
+	// using Tauno, send as string using "," as separator: value1,value2,value3
+	str_buf_clear(mpu_str, MPU_STR_SIZE);
+	str_buf_append_float(mpu_str, MPU_STR_SIZE, acc_xy_angle_deg, 3);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, ",");
+	str_buf_append_float(mpu_str, MPU_STR_SIZE, gyr_z_angle_deg, 3);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, ",");
+	str_buf_append_float(mpu_str, MPU_STR_SIZE, angle_deg, 3);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, "\n");
+	uart_send_string(mpu_str);
+	/*
 	// using https://github.com/qwertpas/SerpentSerialTool
 	str_buf_clear(mpu_str, MPU_STR_SIZE);
 	str_buf_append_string(mpu_str, MPU_STR_SIZE, "acc_xy_deg: ");
@@ -112,7 +124,19 @@ static void read_mpu9250_string(void) {
 	str_buf_append_float(mpu_str, MPU_STR_SIZE, angle_deg, 3);
 	str_buf_append_string(mpu_str, MPU_STR_SIZE, "\n\t");
 	uart_send_string(mpu_str);
+	*/
 }
+
+uint16_t get_program_id_string(char *str, uint16_t str_size) {
+	str_buf_clear(mpu_str, MPU_STR_SIZE);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, "program id: ");
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, PROGRAM_NAME);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, ", compiled: ");
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, __DATE__);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, ", ");
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, __TIME__);
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -123,7 +147,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	uint32_t primask;
+	volatile uint16_t adc_value;
+	volatile int32_t speed;
+	uint32_t local_event;
+	uint16_t local_cnt;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -156,12 +184,77 @@ int main(void)
 
 	foc_init();
 	foc_start();
+	foc_set_speed(FOC_MOTOR1, 1000);
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_12|LL_GPIO_PIN_13);
 
-	str_buf_clear(mpu_str, MPU_STR_SIZE);
-	str_buf_append_string(mpu_str, MPU_STR_SIZE, "testing 64 bytes, not so much\n");
+	get_program_id_string(mpu_str, MPU_STR_SIZE);
 	uart_send_string(mpu_str);
 	_wait_some_time();
 
+	str_buf_clear(mpu_str, MPU_STR_SIZE);
+	str_buf_append_string(mpu_str, MPU_STR_SIZE, "\nusing Tauno-serial-plotter\n");
+	uart_send_string(mpu_str);
+	_wait_some_time();
+
+	local_event = 0;
+	local_cnt = 0;
+	while(1) {
+		/*if(local_event & 1) {
+			// FOC
+			local_cnt++;
+			str_buf_clear(mpu_str, MPU_STR_SIZE);
+			//str_buf_append_uint16(mpu_str, MPU_STR_SIZE, local_cnt);
+			//str_buf_append_string(mpu_str, MPU_STR_SIZE, ",");
+			//str_buf_append_uint16(mpu_str, MPU_STR_SIZE, motors[FOC_MOTOR1].x);
+			//str_buf_append_string(mpu_str, MPU_STR_SIZE, ",");
+			str_buf_append_uint16(mpu_str, MPU_STR_SIZE, sin_lut[motors[FOC_MOTOR1].sin.u]);
+			str_buf_append_string(mpu_str, MPU_STR_SIZE, ",");
+			str_buf_append_uint16(mpu_str, MPU_STR_SIZE, sin_lut[motors[FOC_MOTOR1].sin.v]);
+			str_buf_append_string(mpu_str, MPU_STR_SIZE, ",");
+			str_buf_append_uint16(mpu_str, MPU_STR_SIZE, sin_lut[motors[FOC_MOTOR1].sin.w]);
+			str_buf_append_string(mpu_str, MPU_STR_SIZE, "\n");
+			uart_send_string(mpu_str);
+		}*/
+		if(local_event & 0x0002) {
+			HAL_ADC_Start(&hadc1);
+			HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+			adc_value = HAL_ADC_GetValue(&hadc1);
+
+			if(adc_value > 2148) {
+				speed = (int16_t)(((adc_value - 1948) * 1000)/1948 + 0);
+			}
+			else if(adc_value < 1948) {
+				speed = (int16_t)((adc_value * 1000)/1948 -1000);
+			}
+			else {
+				speed = 0;
+			}
+			foc_set_speed(FOC_MOTOR1, speed);
+		}
+		// wait for global events
+		while(1) {
+			// sync global events
+			primask = __get_PRIMASK();  // Save current interrupt state
+			__disable_irq();            // Disable all interrupts
+
+			local_event = global_event;
+			global_event = 0;
+
+			__set_PRIMASK(primask);     // Restore previous interrupt state
+
+			if(local_event) {
+				// process event
+				break;
+			}
+
+			// else go to sleep
+			LL_LPM_EnableSleep();  // This clears SLEEPDEEP
+
+			// Enter sleep mode (Wait For Interrupt)
+			__WFI();  // or __WFE();
+
+		}
+	}
 
   /* USER CODE END 2 */
 
@@ -170,7 +263,20 @@ int main(void)
 	while (1)
 	{
 		//read_mpu9250_string();
+		//LL_ADC_REG_StartConversionSWStart(ADC1);
 		_wait_some_time();
+		//adc_value = adc1_read();
+		//adc_value = LL_ADC_REG_ReadConversionData12(ADC1);
+
+
+/*
+		str_buf_clear(mpu_str, MPU_STR_SIZE);
+		str_buf_append_uint16(mpu_str, MPU_STR_SIZE, adc_value);
+		str_buf_append_string(mpu_str, MPU_STR_SIZE, "\n");
+		uart_send_string(mpu_str);*/
+
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -184,41 +290,36 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+  LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
+  while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_0)
+  {
+  }
+  LL_RCC_HSI_SetCalibTrimming(16);
+  LL_RCC_HSI_Enable();
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+   /* Wait till HSI is ready */
+  while(LL_RCC_HSI_IsReady() != 1)
+  {
+
+  }
+  LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+  LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
+  LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
+  LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI);
+
+   /* Wait till System clock is ready */
+  while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSI)
+  {
+
+  }
+  LL_SetSystemCoreClock(8000000);
+
+   /* Update the time base */
+  if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK)
   {
     Error_Handler();
   }
-
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV2;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSRC_PCLK2_DIV_2);
 }
 
 /* USER CODE BEGIN 4 */

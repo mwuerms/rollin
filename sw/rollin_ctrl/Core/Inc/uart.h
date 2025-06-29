@@ -100,4 +100,7 @@ uint16_t uart_send_string(char *str);
  */
 //uint16_t uart_stop_recieve(uart_ctrl_t *uart_ctrl);
 
+// called in void USART1_IRQHandler(void)
+void uart_irq_handler(void);
+
 #endif // _MM_UART_H_

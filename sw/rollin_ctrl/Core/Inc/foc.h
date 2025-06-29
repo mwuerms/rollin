@@ -35,7 +35,13 @@ typedef struct {
 	struct {
 		uint16_t u, v, w; // indexes for the phases u, v, w
 	} sin;
-
+	struct {
+		uint16_t speed;
+		uint16_t dir;
+		uint16_t tim_ccr;
+		uint16_t tim_channel;
+	} speed_ctrl;
+	uint16_t x;
 } foc_t;
 
 // - public functions ----------------------------------------------------------
@@ -48,7 +54,7 @@ uint16_t foc_init(void);
 void foc_start(void);
 //void foc_enable(uint16_t motor);
 //void foc_disable(uint16_t motor);
-//void foc_set_speed(uint16_t motor, int16_t speed);
+void foc_set_speed(uint16_t mi, int16_t speed);
 void foc_ctrl_process(void);
 
 #endif // _FOC_H_

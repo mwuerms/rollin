@@ -121,4 +121,11 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 
 /* USER CODE BEGIN 1 */
 
+uint16_t adc1_read(void) {
+	return 0;
+	LL_ADC_REG_StartConversionSWStart(ADC1);
+	while(!LL_ADC_IsActiveFlag_EOS(ADC1));
+	return LL_ADC_REG_ReadConversionData12(ADC1);
+}
+
 /* USER CODE END 1 */
