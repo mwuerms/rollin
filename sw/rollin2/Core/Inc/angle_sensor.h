@@ -14,7 +14,7 @@
 #define ANGLE_SENS_I2C_BUF_SIZE (8)
 typedef struct {
     struct {
-        I2C_TypeDef *hi2c;
+    	I2C_HandleTypeDef *hi2c;
         uint8_t addr;
         uint8_t buf[ANGLE_SENS_I2C_BUF_SIZE];
         uint16_t buf_len;
@@ -28,7 +28,7 @@ typedef struct {
 #define ANGLE_SENSOR_TYPE_AS5600 (5600)
 #define AS5600_I2C_ADDR (0x36)
 
-uint16_t angle_sensor_init(angle_sens_t *as, I2C_TypeDef *hi2c);
+uint16_t angle_sensor_init(angle_sens_t *as, I2C_HandleTypeDef *hi2c);
 uint16_t angle_sensor_get(angle_sens_t *as);
 
 #endif // _ANGLE_SENSOR_H_ 

@@ -32,6 +32,10 @@ extern "C" {
 
 /* USER CODE END Includes */
 
+extern I2C_HandleTypeDef hi2c1;
+
+extern I2C_HandleTypeDef hi2c2;
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
@@ -40,6 +44,9 @@ void MX_I2C1_Init(void);
 void MX_I2C2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
+//uint16_t i2c_wr_blocking(I2C_TypeDef *hi2c, uint8_t addr, uint8_t *buf, uint16_t buf_len);
+//uint16_t i2c_rd_blocking(I2C_TypeDef *hi2c, uint8_t addr, uint8_t *buf, uint16_t buf_len);
 
 /* USER CODE END Prototypes */
 

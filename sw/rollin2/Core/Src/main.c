@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "project.h"
 #include "uart.h"
+#include "str_buf.h"
 #include "bldc_motor.h"
 #include "bldc_driver.h"
 #include "angle_sensor.h"
@@ -55,6 +56,10 @@ bldc_motor_t m1;
 bldc_driver_t md1;
 angle_sens_t as1;
 uart_t u1;
+
+#define MAIN_STR_BUF_SIZE (128)
+char main_str_buf[MAIN_STR_BUF_SIZE];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,7 +70,9 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void waitabit(uint32_t x) {
+	while(x) x--;
+}
 /* USER CODE END 0 */
 
 /**
@@ -82,18 +89,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_AFIO);
-  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
-
-  /* System interrupt init*/
-  NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
-
-  /* SysTick_IRQn interrupt configuration */
-  NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),15, 0));
-
-  /** NOJTAG: JTAG-DP Disabled and SW-DP Enabled
-  */
-  LL_GPIO_AF_Remap_SWJ_NOJTAG();
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -118,7 +114,7 @@ int main(void)
 
   uart_init(&u1, USART1);
 
-  angle_sensor_init(&as1, I2C1);
+  angle_sensor_init(&as1, &hi2c1);
   bldc_driver_init(&md1, TIM1);
   bldc_motor_init(&m1, &md1, &as1);
   bldc_motor_set_pid(&m1, 1.0f, 1.0f, 0.0f);
@@ -133,8 +129,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   uart_send_string_blocking(&u1, "hello from the other side :-D\n");
+  angle_sensor_get(&as1);
+  str_buf_clear(main_str_buf, MAIN_STR_BUF_SIZE);
+  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
+  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
+  uart_send_string_blocking(&u1, main_str_buf);
   while (1)
   {
+	  waitabit(1000000);
+	  angle_sensor_get(&as1);
+	  str_buf_clear(main_str_buf, MAIN_STR_BUF_SIZE);
+	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
+	  uart_send_string_blocking(&u1, main_str_buf);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -177,8 +184,13 @@ void SystemClock_Config(void)
   {
 
   }
-  LL_Init1msTick(64000000);
   LL_SetSystemCoreClock(64000000);
+
+   /* Update the time base */
+  if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 
 /* USER CODE BEGIN 4 */
