@@ -41,6 +41,8 @@ uint16_t angle_sensor_get(angle_sens_t *as) {
     //as->raw_angle = ((uint16_t*)as->i2c.buf)[0];// AS5600 ist big endeian, STM32 is little endian
 	as->raw_angle = _u16hl(as->i2c.buf[0], as->i2c.buf[1]);
     as->angle_deg = (360 * as->raw_angle)/4096;
+    as->raw_angle = _u16hl(as->i2c.buf[2], as->i2c.buf[3]);
+	as->angle_deg2 = (360 * as->raw_angle)/4096;
     return true;
 }
 

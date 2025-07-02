@@ -83,7 +83,8 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	uint32_t now, last_tick;
+	float dt, ang_deg_vel, prev_angle_deg, delta;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -115,19 +116,27 @@ int main(void)
   uart_init(&u1, USART1);
 
   angle_sensor_init(&as1, &hi2c1);
+
   bldc_driver_init(&md1, TIM1);
+  bldc_driver_set_enable_pin(&md1, MOT0_EN_GPIO_Port, MOT0_EN_Pin);
+
   bldc_motor_init(&m1, &md1, &as1);
   bldc_motor_set_pid(&m1, 1.0f, 1.0f, 0.0f);
   bldc_motor_set_voltage_limit(&m1, 1.0f);
   bldc_motor_set_target_speed(&m1, 10.0f);
 
   bldc_driver_enable(&md1);
+  bldc_driver_set_pwm(&md1, 100, 200, 300);
+
+  bldc_motor_enable(&m1);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  now = HAL_GetTick();
+  last_tick = now;
   uart_send_string_blocking(&u1, "hello from the other side :-D\n");
   angle_sensor_get(&as1);
   str_buf_clear(main_str_buf, MAIN_STR_BUF_SIZE);
@@ -136,12 +145,36 @@ int main(void)
   uart_send_string_blocking(&u1, main_str_buf);
   while (1)
   {
-	  waitabit(1000000);
+	  waitabit(500000);
+
 	  angle_sensor_get(&as1);
+
+	  now = HAL_GetTick();
+	  dt = (float)(now - last_tick)/1000.0f; // in ms
+	  last_tick = now;
+
+	  delta = (as1.angle_deg - prev_angle_deg);
+
+	  if(delta >  180.0f) delta -= 360.0f;
+	  if(delta < -180.0f) delta += 360.0f;
+
+	  ang_deg_vel = delta/dt;
+
 	  str_buf_clear(main_str_buf, MAIN_STR_BUF_SIZE);
-	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
+	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, as1.angle_deg, 3);
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, as1.angle_deg2, 3);
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+	  //str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
+	  //str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, ang_deg_vel, 5);
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
 	  uart_send_string_blocking(&u1, main_str_buf);
+
+
+	  prev_angle_deg = as1.angle_deg;
+
+	  bldc_motor_update(&m1, dt);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
