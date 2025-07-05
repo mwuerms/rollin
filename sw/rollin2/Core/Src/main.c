@@ -83,7 +83,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	uint32_t now, last_tick;
+	uint32_t now, last_tick, waitcnt;
 	float dt, ang_deg_vel, prev_angle_deg, delta;
   /* USER CODE END 1 */
 
@@ -121,14 +121,18 @@ int main(void)
   bldc_driver_set_enable_pin(&md1, MOT0_EN_GPIO_Port, MOT0_EN_Pin);
 
   bldc_motor_init(&m1, &md1, &as1);
+  bldc_motor_set_ctrl_type(&m1, BLDC_MOTOR_CTRL_TYPE_VELOCITY_OPENLOOP);
+  bldc_motor_set_motor_parameters(&m1, 7, 360, 0.4f);
   bldc_motor_set_pid(&m1, 1.0f, 1.0f, 0.0f);
   bldc_motor_set_voltage_limit(&m1, 1.0f);
-  bldc_motor_set_target_speed(&m1, 10.0f);
+  bldc_motor_set_target_speed(&m1, 1.0f);
+  bldc_motor_set_target_angle_deg(&m1, 135.0f);
 
   bldc_driver_enable(&md1);
-  bldc_driver_set_pwm(&md1, 100, 200, 300);
+  //bldc_driver_set_pwm(&md1, 100, 200, 300);
 
   bldc_motor_enable(&m1);
+  m1.set.voltage_q = 0.125f;
 
   /* USER CODE END 2 */
 
@@ -143,38 +147,45 @@ int main(void)
   str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
   str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
   uart_send_string_blocking(&u1, main_str_buf);
+  waitcnt = 10000;
   while (1)
   {
-	  waitabit(500000);
-
-	  angle_sensor_get(&as1);
+	  //waitabit(500000);
+	  waitabit(waitcnt);
 
 	  now = HAL_GetTick();
 	  dt = (float)(now - last_tick)/1000.0f; // in ms
 	  last_tick = now;
 
-	  delta = (as1.angle_deg - prev_angle_deg);
-
-	  if(delta >  180.0f) delta -= 360.0f;
-	  if(delta < -180.0f) delta += 360.0f;
-
-	  ang_deg_vel = delta/dt;
-
+	  bldc_motor_move(&m1, dt);
+#if 0
 	  str_buf_clear(main_str_buf, MAIN_STR_BUF_SIZE);
-	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, as1.angle_deg, 3);
+	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, m1.current.angle_deg, 3);
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
-	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, as1.angle_deg2, 3);
+	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, m1.current.angle_deg_s, 3);
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
-	  //str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
+	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+	  //str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, ang_deg_vel, 5);*/
+
+	  //str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, statangle, 5);
 	  //str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
-	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, ang_deg_vel, 5);
+
+	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, dbg_uu, 5);
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, dbg_uv, 5);
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, dbg_uw, 5);
+/*
+	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, statangle_u);
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, statangle_v);
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, statangle_w);
+*/
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
 	  uart_send_string_blocking(&u1, main_str_buf);
-
-
-	  prev_angle_deg = as1.angle_deg;
-
-	  bldc_motor_update(&m1, dt);
+#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

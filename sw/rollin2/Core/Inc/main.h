@@ -69,9 +69,9 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define MOT0_EN_Pin LL_GPIO_PIN_14
+#define MOT0_EN_Pin LL_GPIO_PIN_15
 #define MOT0_EN_GPIO_Port GPIOB
-#define MOT1_EN_Pin LL_GPIO_PIN_15
+#define MOT1_EN_Pin LL_GPIO_PIN_14
 #define MOT1_EN_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
