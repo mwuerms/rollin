@@ -97,7 +97,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	uint32_t now, last_tick, waitcnt;
-	float dt;//, ang_deg_vel, prev_angle_deg, delta;
+	float dt, sum_dt;//, ang_deg_vel, prev_angle_deg, delta;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -134,12 +134,14 @@ int main(void)
   bldc_driver_set_enable_pin(&md1, MOT0_EN_GPIO_Port, MOT0_EN_Pin);
 
   bldc_motor_init(&m1, &md1, &as1);
-  bldc_motor_set_ctrl_type(&m1, BLDC_MOTOR_CTRL_TYPE_VELOCITY_OPENLOOP);
+  //bldc_motor_set_ctrl_type(&m1, BLDC_MOTOR_CTRL_TYPE_VELOCITY_OPENLOOP);
+  bldc_motor_set_ctrl_type(&m1, BLDC_MOTOR_CTRL_TYPE_ANGLE_OPENLOOP);
   bldc_motor_set_motor_parameters(&m1, 7, 360, 0.4f);
   bldc_motor_set_pid(&m1, 1.0f, 1.0f, 0.0f);
   bldc_motor_set_voltage_limit(&m1, 1.0f);
+  bldc_motor_set_speed_limit(&m1, 1.0f);
   bldc_motor_set_target_speed(&m1, 1.0f);
-  bldc_motor_set_target_angle_deg(&m1, 135.0f);
+  bldc_motor_set_target_angle_deg(&m1, 90.0f);
 
   bldc_driver_enable(&md1);
   //bldc_driver_set_pwm(&md1, 100, 200, 300);
@@ -161,6 +163,7 @@ int main(void)
   str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
   uart_send_string_blocking(&u1, main_str_buf);
   waitcnt = 1;//0000;
+  sum_dt = 0;
 
   //test_calcs();
 
@@ -205,6 +208,15 @@ int main(void)
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
 	  uart_send_string_blocking(&u1, main_str_buf);
 //#endif
+
+	  sum_dt += dt;
+	  if(sum_dt > 2.0f) {
+		  sum_dt = 0.0f;
+		  m1.calc.shaft_angle_deg = 0;
+		  m1.calc.shaft_angle_deg_old = 0;
+		  bldc_motor_set_target_angle_deg(&m1, 150.0f);
+		  bldc_motor_enable(&m1);
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

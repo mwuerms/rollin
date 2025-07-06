@@ -6,7 +6,7 @@
 
 #include "bldc_motor.h"
 #include "calcs.h"
-//#include <math.h>
+#include <math.h>
 
 uint16_t bldc_motor_init(bldc_motor_t *m, bldc_driver_t *d, angle_sens_t *as) {
     if(m == NULL) {
@@ -73,13 +73,21 @@ uint16_t bldc_motor_set_voltage_limit(bldc_motor_t *m, float voltage_limit) {
     return true;
 }
 
+uint16_t bldc_motor_set_speed_limit(bldc_motor_t *m, float speed) {
+	if(m == NULL) {
+        // error, invalid motor
+        return false;
+    }
+    m->limit.speed_rot_s = speed;
+    return true;
+}
+
 uint16_t bldc_motor_set_target_speed(bldc_motor_t *m, float speed) {
 	if(m == NULL) {
         // error, invalid motor
         return false;
     }
     m->target.speed_rot_s = speed;
-    m->target.angle_deg_s = 360.0f * speed;
     return true;
 }
 
@@ -91,6 +99,7 @@ uint16_t bldc_motor_set_target_angle_deg(bldc_motor_t *m, float angle_deg) {
     m->target.angle_deg = angle_deg;
     return true;
 }
+
 
 /* set template
 uint16_t bldc_motor_set_target_x(bldc_motor_t *m, float x) {
@@ -145,7 +154,7 @@ uint16_t statangle_inc = 1;
 
 static uint16_t bldc_motor_velocity_openloop(bldc_motor_t *m, float dt) {
 
-    m->calc.shaft_angle_deg = m->target.angle_deg_s * dt + m->calc.shaft_angle_deg_old; // next shaft angle
+    m->calc.shaft_angle_deg = calc_angle_velocity_from_rotation_speed(m->target.speed_rot_s) * dt + m->calc.shaft_angle_deg_old; // next shaft angle
     m->calc.el_angle_deg = m->calc.shaft_angle_deg * m->motor.nb_pole_pairs;// next electrical angle
     float delta_el_ang = m->calc.el_angle_deg - m->calc.el_angle_deg_old;
     statangle_inc = (uint16_t)delta_el_ang;
@@ -157,9 +166,9 @@ static uint16_t bldc_motor_velocity_openloop(bldc_motor_t *m, float dt) {
     statangle_v = (statangle_u + 120) % 360;
     statangle_w = (statangle_u + 240) % 360;
 
-    float uu = 0.5f + 0.5f * m->set.voltage_q * calcs_sinf_from_lut(statangle_u);
-	float uv = 0.5f + 0.5f * m->set.voltage_q * calcs_sinf_from_lut(statangle_v);
-	float uw = 0.5f + 0.5f * m->set.voltage_q * calcs_sinf_from_lut(statangle_w);
+    float uu = 0.5f + 0.5f * m->set.voltage_q * calc_sinf_from_lut(statangle_u);
+	float uv = 0.5f + 0.5f * m->set.voltage_q * calc_sinf_from_lut(statangle_v);
+	float uw = 0.5f + 0.5f * m->set.voltage_q * calc_sinf_from_lut(statangle_w);
 
     bldc_driver_set_phase_voltages(m->d, uu, uv, uw);
     dbg_uu = uu;
@@ -169,11 +178,24 @@ static uint16_t bldc_motor_velocity_openloop(bldc_motor_t *m, float dt) {
 }
 
 static uint16_t bldc_motor_angle_openloop(bldc_motor_t *m, float dt) {
-    return 0;
+	float error = (m->target.angle_deg) - m->calc.shaft_angle_deg;
+	if(calc_absf(error) < 0.2f) {
+		// error is small enough, do not continue
+		bldc_motor_disable(m);
+		return true;
+	}
+	float angle_deg_s = error / dt; // angle velocity needed
+	if(calc_absf(angle_deg_s) > calc_angle_velocity_from_rotation_speed(m->limit.speed_rot_s)) {
+		m->target.speed_rot_s = m->limit.speed_rot_s;
+	}
+	else {
+		m->target.speed_rot_s = calc_rotation_speed_from_angle_velocity(angle_deg_s);
+	}
+    return bldc_motor_velocity_openloop(m, dt);
 }
 
 static uint16_t bldc_motor_angle_velocity_pid(bldc_motor_t *m, float dt) {
-	float error = m->target.angle_deg_s - m->current.angle_deg_s;
+	float error = calc_angle_velocity_from_rotation_speed(m->target.speed_rot_s) - m->current.angle_deg_s;
 
 	// out = kp * err + ki * err * dt + old_i + kd * err / dt;
 	m->pid.integrator += m->pid.ki * error * dt;
@@ -184,6 +206,7 @@ static uint16_t bldc_motor_angle_velocity_pid(bldc_motor_t *m, float dt) {
 	m->set.voltage_q = m->pid.kp * error + m->pid.integrator;
 	if(m->set.voltage_q > +m->limit.voltage) m->set.voltage_q = +m->limit.voltage;
 	if(m->set.voltage_q < -m->limit.voltage) m->set.voltage_q = -m->limit.voltage;
+	return false; // not yet implemented
 }
 
 uint16_t bldc_motor_move(bldc_motor_t *m, float dt) {
@@ -214,30 +237,6 @@ uint16_t bldc_motor_move(bldc_motor_t *m, float dt) {
     //m->set.voltage_q = 0.40f;
     //bldc_motor_angle_velocity_pid(m, dt);
 
-    // calculate phase voltages u, v, w, each 120° apart
-    /*float angle_rad = (m->current.angle_deg * 2*M_PI) / 360.0f;
-    float uu = 0.5f + 0.5f * m->set.voltage_q * sinf(angle_rad);
-    float uv = 0.5f + 0.5f * m->set.voltage_q * sinf(angle_rad - ((120.0f * 2*M_PI) / 360.0f));
-    float uw = 0.5f + 0.5f * m->set.voltage_q * sinf(angle_rad - ((240.0f * 2*M_PI) / 360.0f));*/
-#if 0
-    float angle_rad;
-    angle_rad = ((statangle_u)* 2*M_PI) / 360.0f;
-    //if(angle_rad > (2*M_PI)) angle_rad -= (2*M_PI);
-	float uu = 0.5f + 0.5f * m->set.voltage_q * sinf(angle_rad);
-	angle_rad = ((statangle_v)* 2*M_PI) / 360.0f;
-	//if(angle_rad > (2*M_PI)) angle_rad -= (2*M_PI);
-	float uv = 0.5f + 0.5f * m->set.voltage_q * sinf(angle_rad);
-	angle_rad = ((statangle_w)* 2*M_PI) / 360.0f;
-	//if(angle_rad > (2*M_PI)) angle_rad -= (2*M_PI);
-	float uw = 0.5f + 0.5f * m->set.voltage_q * sinf(angle_rad);
-
-	statangle_u += statangle_inc;
-    if(statangle_u >= 360.0f) statangle_u = 0.0f;
-	statangle_v += statangle_inc;
-    if(statangle_v >= 360.0f) statangle_v = 0.0f;
-	statangle_w += statangle_inc;
-    if(statangle_w >= 360.0f) statangle_w = 0.0f;
-#endif
     switch(m->ctrl.type) {
         case BLDC_MOTOR_CTRL_TYPE_VELOCITY_OPENLOOP: 
             bldc_motor_velocity_openloop(m, dt);

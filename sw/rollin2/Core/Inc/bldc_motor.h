@@ -22,9 +22,9 @@ typedef struct {
     bldc_driver_t *d;
     angle_sens_t *as;
     struct {
-        float speed_rot_s; /// target speed in rotation / s
         float angle_deg; /// target angle in deg
-        float angle_deg_s; /// target angle velocity in deg / s
+        float speed_rot_s; /// target speed in rotation / s
+        /// deleted target angle velocity in deg / s, this is redundant information, calc from speed_rot_s
     } target;
     struct {
         float angle_deg; /// current angle in deg
@@ -41,6 +41,7 @@ typedef struct {
     } calc; /// for calculating purposes
     struct {
         float voltage;
+        float speed_rot_s; /// limit speed in rotation / s
     } limit;
     struct {
         uint16_t nb_pole_pairs;
@@ -87,6 +88,7 @@ uint16_t bldc_motor_set_motor_parameters(bldc_motor_t *m, uint16_t pp, float kv,
 uint16_t bldc_motor_set_ctrl_type(bldc_motor_t *m, uint16_t ctype);
 uint16_t bldc_motor_set_pid(bldc_motor_t *m, float kp, float ki, float kd);
 uint16_t bldc_motor_set_voltage_limit(bldc_motor_t *m, float voltage_limit);
+uint16_t bldc_motor_set_speed_limit(bldc_motor_t *m, float speed);
 uint16_t bldc_motor_set_target_speed(bldc_motor_t *m, float speed);
 uint16_t bldc_motor_set_target_angle_deg(bldc_motor_t *m, float angle_deg);
 //uint16_t bldc_motor_set_pid(bldc_motor_t *m, 
