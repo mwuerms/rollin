@@ -73,6 +73,19 @@ void SystemClock_Config(void);
 void waitabit(uint32_t x) {
 	while(x) x--;
 }
+/*#include "calcs.h"
+void test_calcs(void) {
+  volatile float res;
+  res = calcs_sinf_from_lut(0); // 0
+  res = calcs_sinf_from_lut(45); // 0.707
+  res = calcs_sinf_from_lut(60); // 0.866
+  res = calcs_sinf_from_lut(90); // 0.1
+  res = calcs_sinf_from_lut(135); // 0.707
+  res = calcs_sinf_from_lut(180); // 1.22E-16
+  res = calcs_sinf_from_lut(359); // -0.017
+  res = calcs_sinf_from_lut(270); // -1
+  return;
+}*/
 /* USER CODE END 0 */
 
 /**
@@ -84,7 +97,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	uint32_t now, last_tick, waitcnt;
-	float dt, ang_deg_vel, prev_angle_deg, delta;
+	float dt;//, ang_deg_vel, prev_angle_deg, delta;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -148,6 +161,9 @@ int main(void)
   str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
   uart_send_string_blocking(&u1, main_str_buf);
   waitcnt = 1;//0000;
+
+  //test_calcs();
+
   while (1)
   {
 	  //waitabit(500000);
