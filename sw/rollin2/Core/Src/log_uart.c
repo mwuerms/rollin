@@ -5,6 +5,7 @@
  */
 
 #include "log_uart.h"
+#include "str_buf.h"
 
 #define uart_send(...)
 
@@ -16,7 +17,7 @@ uint16_t log_uart_init(log_uart_t *l, char *name) {
     // init uart
     l->uart = 1;
     str_buf_clear(l->name, LOG_UART_NAME_SIZE);
-    str_buf_append_string(l->name, LOG_UART_NAME_SIZE);
+    str_buf_append_string(l->name, LOG_UART_NAME_SIZE, name);
     log_uart_disable(l);
     return true;
 }

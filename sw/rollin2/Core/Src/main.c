@@ -147,7 +147,7 @@ int main(void)
   str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
   str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
   uart_send_string_blocking(&u1, main_str_buf);
-  waitcnt = 10000;
+  waitcnt = 1;//0000;
   while (1)
   {
 	  //waitabit(500000);
@@ -158,14 +158,14 @@ int main(void)
 	  last_tick = now;
 
 	  bldc_motor_move(&m1, dt);
-#if 0
+//#if 0
 	  str_buf_clear(main_str_buf, MAIN_STR_BUF_SIZE);
 	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, m1.current.angle_deg, 3);
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
-	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, m1.current.angle_deg_s, 3);
-	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
-	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
-	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+//	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, m1.current.angle_deg_s, 3);
+//	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+//	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, as1.raw_angle);
+//	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
 	  //str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, ang_deg_vel, 5);*/
 
 	  //str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, statangle, 5);
@@ -176,16 +176,19 @@ int main(void)
 	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, dbg_uv, 5);
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
 	  str_buf_append_float(main_str_buf, MAIN_STR_BUF_SIZE, dbg_uw, 5);
-/*
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+
 	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, statangle_u);
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
 	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, statangle_v);
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
 	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, statangle_w);
-*/
+	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, ",");
+	  str_buf_append_uint16(main_str_buf, MAIN_STR_BUF_SIZE, statangle_inc);
+
 	  str_buf_append_string(main_str_buf, MAIN_STR_BUF_SIZE, "\n");
 	  uart_send_string_blocking(&u1, main_str_buf);
-#endif
+//#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

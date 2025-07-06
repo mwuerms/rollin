@@ -35,12 +35,15 @@ typedef struct {
     } current;
     struct {
         float shaft_angle_deg; /// 
+        float shaft_angle_deg_old; /// 
+        float el_angle_deg; /// 
+        float el_angle_deg_old; /// 
     } calc; /// for calculating purposes
     struct {
         float voltage;
     } limit;
     struct {
-        uint16_t pole_pairs;
+        uint16_t nb_pole_pairs;
         float kv;
         float coil_resistance;
     } motor;
@@ -78,6 +81,7 @@ extern float dbg_uw;
 extern uint16_t statangle_u;
 extern uint16_t statangle_v;
 extern uint16_t statangle_w;
+extern uint16_t statangle_inc;
 uint16_t bldc_motor_init(bldc_motor_t *m, bldc_driver_t *d, angle_sens_t *as);
 uint16_t bldc_motor_set_motor_parameters(bldc_motor_t *m, uint16_t pp, float kv, float coil_res);
 uint16_t bldc_motor_set_ctrl_type(bldc_motor_t *m, uint16_t ctype);
